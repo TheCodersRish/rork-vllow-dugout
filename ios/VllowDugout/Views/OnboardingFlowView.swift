@@ -228,30 +228,36 @@ struct OnboardingFlowView: View {
                     coachBubble("Yo — I'm your Vllow coach. Three quick questions so I don't give you generic gym-bro advice. Deal?")
                     quizBlock(
                         title: "How would you rate your game right now?",
-                        options: QuizSkillTier.allCases.map(\.rawValue)
-                    ) { pick in
-                        if let m = QuizSkillTier.allCases.first(where: { $0.rawValue == pick }) {
-                            profile.quizSkill = m
-                        }
-                    } selection: profile.quizSkill.rawValue
+                        options: QuizSkillTier.allCases.map(\.rawValue),
+                        onPick: { pick in
+                            if let m = QuizSkillTier.allCases.first(where: { $0.rawValue == pick }) {
+                                profile.quizSkill = m
+                            }
+                        },
+                        selection: profile.quizSkill.rawValue
+                    )
                 } else if quizIndex == 1 {
                     quizBlock(
                         title: "Where's your fitness this season?",
-                        options: QuizFitnessLevel.allCases.map(\.rawValue)
-                    ) { pick in
-                        if let m = QuizFitnessLevel.allCases.first(where: { $0.rawValue == pick }) {
-                            profile.quizFitness = m
-                        }
-                    } selection: profile.quizFitness.rawValue
+                        options: QuizFitnessLevel.allCases.map(\.rawValue),
+                        onPick: { pick in
+                            if let m = QuizFitnessLevel.allCases.first(where: { $0.rawValue == pick }) {
+                                profile.quizFitness = m
+                            }
+                        },
+                        selection: profile.quizFitness.rawValue
+                    )
                 } else {
                     quizBlock(
                         title: "How do you usually eat?",
-                        options: DietaryPreference.allCases.map(\.rawValue)
-                    ) { pick in
-                        if let m = DietaryPreference.allCases.first(where: { $0.rawValue == pick }) {
-                            profile.dietaryPreference = m
-                        }
-                    } selection: profile.dietaryPreference.rawValue
+                        options: DietaryPreference.allCases.map(\.rawValue),
+                        onPick: { pick in
+                            if let m = DietaryPreference.allCases.first(where: { $0.rawValue == pick }) {
+                                profile.dietaryPreference = m
+                            }
+                        },
+                        selection: profile.dietaryPreference.rawValue
+                    )
                     userEchoBubble("Locked in — let's build your plan around that.")
                 }
             }

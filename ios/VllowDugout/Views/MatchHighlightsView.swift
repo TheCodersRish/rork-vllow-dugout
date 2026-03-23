@@ -71,7 +71,7 @@ struct MatchHighlightsView: View {
                         .clipShape(.rect(cornerRadius: 14))
                 }
 
-                if let url = videoURL, let p = player, playingEventID != nil {
+                if videoURL != nil, let p = player, playingEventID != nil {
                     VideoPlayer(player: p)
                         .frame(height: 220)
                         .clipShape(.rect(cornerRadius: 16))
