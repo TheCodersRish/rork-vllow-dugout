@@ -11,19 +11,23 @@ struct ArenaView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                periodFilter
-                yourStatsBar
-                topThreeSection
-                fullLeaderboard
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 20) {
+                    highlightsEntry
+                    periodFilter
+                    yourStatsBar
+                    topThreeSection
+                    fullLeaderboard
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 120)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.bottom, 120)
+            .scrollIndicators(.hidden)
+            .background(AppTheme.darkBg)
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .scrollIndicators(.hidden)
-        .background(AppTheme.darkBg)
         .overlay(alignment: .top) {
             if showChallengeFeedback {
                 challengeBanner
@@ -31,6 +35,46 @@ struct ArenaView: View {
                     .padding(.top, 8)
             }
         }
+    }
+
+    private var highlightsEntry: some View {
+        NavigationLink {
+            MatchHighlightsView()
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(AppTheme.neonGreenDim)
+                        .frame(width: 52, height: 52)
+                    Image(systemName: "waveform.and.magnifyingglass")
+                        .font(.system(size: 22))
+                        .foregroundStyle(AppTheme.neonGreen)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Match highlight finder")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Text("On-device audio + scoreboard scan")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
+            .padding(18)
+            .background(AppTheme.cardSurface)
+            .clipShape(.rect(cornerRadius: 18))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(AppTheme.neonGreen.opacity(0.25), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var periodFilter: some View {

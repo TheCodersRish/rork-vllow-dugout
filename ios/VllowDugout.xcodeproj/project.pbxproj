@@ -404,6 +404,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Vllow Dugout uses your health data to track steps, calories, and heart rate for your cricket training insights.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Vllow Dugout saves your cricket training workout data to Apple Health to help you track your fitness progress.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Vllow Dugout analyzes match videos on your device to find highlight moments.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -440,6 +441,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Vllow Dugout uses your health data to track steps, calories, and heart rate for your cricket training insights.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Vllow Dugout saves your cricket training workout data to Apple Health to help you track your fitness progress.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Vllow Dugout analyzes match videos on your device to find highlight moments.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
