@@ -157,4 +157,151 @@ enum MockData {
         DismissalPattern(type: "Bowled", percentage: 15),
         DismissalPattern(type: "Run Out", percentage: 10),
     ]
+
+    static let mealPlanItems: [MealPlanItem] = [
+        MealPlanItem(
+            id: UUID(uuidString: "a1000001-0000-0000-0000-000000000001")!,
+            title: "Power Oats & Berries",
+            slot: .breakfast,
+            category: .training,
+            calories: 420,
+            proteinG: 28,
+            carbsG: 52,
+            fatG: 12,
+            highlight: "Slow carbs for a long net block without the crash.",
+            imageURL: "https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=800",
+            prepMinutes: 12,
+            ingredients: [
+                "Rolled oats 60g", "Mixed berries 100g", "Greek yogurt 150g",
+                "Honey 1 tbsp", "Chia seeds 1 tbsp", "Almond milk 200ml"
+            ],
+            chefNotes: "Eat 90 minutes before training. Add cinnamon for steadier glucose."
+        ),
+        MealPlanItem(
+            id: UUID(uuidString: "a1000001-0000-0000-0000-000000000002")!,
+            title: "Crease Chicken Bowl",
+            slot: .lunch,
+            category: .training,
+            calories: 640,
+            proteinG: 48,
+            carbsG: 55,
+            fatG: 22,
+            highlight: "High protein for muscle recovery after bowling workloads.",
+            imageURL: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
+            prepMinutes: 25,
+            ingredients: [
+                "Grilled chicken breast 180g", "Brown rice 180g cooked",
+                "Roasted broccoli 120g", "Olive oil 1 tbsp", "Lemon, herbs"
+            ],
+            chefNotes: "Double rice on heavy batting days; dial oil back if you need a lighter gut."
+        ),
+        MealPlanItem(
+            id: UUID(uuidString: "a1000001-0000-0000-0000-000000000003")!,
+            title: "Match Eve Salmon",
+            slot: .dinner,
+            category: .matchDay,
+            calories: 580,
+            proteinG: 42,
+            carbsG: 48,
+            fatG: 24,
+            highlight: "Omega-3s and clean carbs the night before you take the field.",
+            imageURL: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800",
+            prepMinutes: 28,
+            ingredients: [
+                "Salmon fillet 180g", "Sweet potato 200g", "Asparagus bundle",
+                "Garlic, dill", "Extra virgin olive oil"
+            ],
+            chefNotes: "Keep spice mild — sleep quality matters more than flavor fireworks."
+        ),
+        MealPlanItem(
+            id: UUID(uuidString: "a1000001-0000-0000-0000-000000000004")!,
+            title: "Stadium Morning Stack",
+            slot: .breakfast,
+            category: .matchDay,
+            calories: 510,
+            proteinG: 32,
+            carbsG: 58,
+            fatG: 16,
+            highlight: "Portable energy for early toss times and warm-ups.",
+            imageURL: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800",
+            prepMinutes: 15,
+            ingredients: [
+                "Wholegrain toast 2 slices", "Eggs 2", "Avocado 1/2",
+                "Cherry tomatoes", "Sea salt, chili flakes"
+            ],
+            chefNotes: "If nerves hit, swap half the toast for extra fruit."
+        ),
+        MealPlanItem(
+            id: UUID(uuidString: "a1000001-0000-0000-0000-000000000005")!,
+            title: "Recovery Lentil Dhal",
+            slot: .dinner,
+            category: .recovery,
+            calories: 520,
+            proteinG: 26,
+            carbsG: 68,
+            fatG: 14,
+            highlight: "Anti-inflammatory spices after a heavy fielding day.",
+            imageURL: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800",
+            prepMinutes: 35,
+            ingredients: [
+                "Red lentils 200g dry", "Coconut milk 200ml", "Spinach 120g",
+                "Turmeric, cumin, ginger", "Basmati rice 150g cooked"
+            ],
+            chefNotes: "Hydrate aggressively with this meal — sodium supports rehydration."
+        ),
+        MealPlanItem(
+            id: UUID(uuidString: "a1000001-0000-0000-0000-000000000006")!,
+            title: "Pavilion Protein Shake",
+            slot: .snack,
+            category: .recovery,
+            calories: 280,
+            proteinG: 32,
+            carbsG: 22,
+            fatG: 8,
+            highlight: "30-minute post-session window — rebuild while you commute.",
+            imageURL: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=800",
+            prepMinutes: 5,
+            ingredients: [
+                "Whey or plant protein 35g", "Banana 1", "Oats 30g",
+                "Peanut butter 1 tbsp", "Ice, water or milk"
+            ],
+            chefNotes: "Blend with ice for heat days — core temp drops slightly."
+        ),
+        MealPlanItem(
+            id: UUID(uuidString: "a1000001-0000-0000-0000-000000000007")!,
+            title: "Garden Buddha Bowl",
+            slot: .lunch,
+            category: .vegetarian,
+            calories: 560,
+            proteinG: 24,
+            carbsG: 72,
+            fatG: 20,
+            highlight: "Plant protein mix that still clears club-level training targets.",
+            imageURL: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800",
+            prepMinutes: 22,
+            ingredients: [
+                "Chickpeas 200g roasted", "Quinoa 150g cooked", "Kale 80g",
+                "Tahini dressing", "Pumpkin seeds, pickled onion"
+            ],
+            chefNotes: "Add halloumi if you need a protein bump without meat."
+        ),
+        MealPlanItem(
+            id: UUID(uuidString: "a1000001-0000-0000-0000-000000000008")!,
+            title: "Keeper Hydration Bite",
+            slot: .snack,
+            category: .training,
+            calories: 190,
+            proteinG: 12,
+            carbsG: 24,
+            fatG: 6,
+            highlight: "Electrolytes + quick fuel between keeping drills.",
+            imageURL: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800",
+            prepMinutes: 8,
+            ingredients: [
+                "Rice cakes 2", "Cottage cheese 100g", "Cucumber slices",
+                "Coconut water 250ml", "Pinch of sea salt"
+            ],
+            chefNotes: "Sip coconut water across the session — don't chug."
+        ),
+    ]
 }

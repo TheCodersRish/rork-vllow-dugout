@@ -1,10 +1,12 @@
 import SwiftUI
 import HealthKit
+import UIKit
 
 struct ProfileView: View {
     let authViewModel: AuthViewModel
     let appState: AppState
     @State private var healthService = HealthKitService()
+    @State private var playerProfile: PlayerOnboardingProfile? = OnboardingProfileStore.load()
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -12,6 +14,7 @@ struct ProfileView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     profileHeader
+                    dugoutProfileSection
                     statsOverview
                     healthSection
                     integrationsSection
@@ -37,31 +40,52 @@ struct ProfileView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onAppear { playerProfile = OnboardingProfileStore.load() }
     }
 
     private var profileHeader: some View {
         VStack(spacing: 16) {
-            Circle()
-                .fill(AppTheme.cardSurfaceLight)
-                .frame(width: 80, height: 80)
-                .overlay(
-                    Text(userInitial)
-                        .font(.system(size: 32, weight: .black))
-                        .foregroundStyle(AppTheme.neonGreen)
-                )
-                .overlay(
+            Group {
+                if let data = playerProfile?.profilePhotoJPEGData,
+                   let ui = UIImage(data: data) {
+                    Image(uiImage: ui)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 80, height: 80)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(AppTheme.neonGreen.opacity(0.5), lineWidth: 2))
+                } else {
                     Circle()
-                        .stroke(AppTheme.neonGreen.opacity(0.5), lineWidth: 2)
-                )
+                        .fill(AppTheme.cardSurfaceLight)
+                        .frame(width: 80, height: 80)
+                        .overlay(
+                            Text(userInitial)
+                                .font(.system(size: 32, weight: .black))
+                                .foregroundStyle(AppTheme.neonGreen)
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(AppTheme.neonGreen.opacity(0.5), lineWidth: 2)
+                        )
+                }
+            }
 
             VStack(spacing: 4) {
-                Text(authViewModel.currentUser?.name ?? "Champion")
+                Text(authViewModel.currentUser?.name ?? playerProfile?.displayName ?? "Champion")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(AppTheme.textPrimary)
 
                 Text(authViewModel.currentUser?.email ?? "")
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
+
+                if let bio = playerProfile?.bio, !bio.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(bio)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 8)
+                }
             }
 
             HStack(spacing: 6) {
@@ -87,6 +111,140 @@ struct ProfileView: View {
             RoundedRectangle(cornerRadius: 20)
                 .stroke(AppTheme.border, lineWidth: 0.5)
         )
+    }
+
+    private var dugoutProfileSection: some View {
+        Group {
+            if let p = playerProfile {
+                VStack(alignment: .leading, spacing: 14) {
+                    sectionHeader(title: "YOUR DUGOUT", icon: "person.crop.circle.fill")
+
+                    if p.isYouthMode {
+                        HStack(spacing: 8) {
+                            Image(systemName: "figure.and.child.holdinghands")
+                                .foregroundStyle(AppTheme.neonGreen)
+                            Text("Youth Mode")
+                                .font(.system(size: 14, weight: .heavy))
+                                .foregroundStyle(AppTheme.textPrimary)
+                            Spacer()
+                            Text("ACTIVE")
+                                .font(.system(size: 9, weight: .heavy))
+                                .tracking(1)
+                                .foregroundStyle(AppTheme.neonGreen)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(AppTheme.neonGreen.opacity(0.12))
+                                .clipShape(Capsule())
+                        }
+                        .padding(14)
+                        .background(AppTheme.cardSurface)
+                        .clipShape(.rect(cornerRadius: 14))
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.border, lineWidth: 0.5))
+                    }
+
+                    profileRow(icon: "sportscourt.fill", title: "Position", value: p.position.rawValue)
+                    profileRow(icon: "chart.line.uptrend.xyaxis", title: "Level", value: p.experienceLevel.rawValue)
+                    profileRow(icon: "person.3.fill", title: "Team", value: p.teamName.isEmpty ? "—" : p.teamName)
+                    profileRow(icon: "flag.fill", title: "League", value: p.leagueName.isEmpty ? "—" : p.leagueName)
+
+                    if !p.goals.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("GOALS")
+                                .font(.system(size: 9, weight: .heavy))
+                                .tracking(1.5)
+                                .foregroundStyle(AppTheme.textSecondary)
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 8)], spacing: 8) {
+                                ForEach(p.goals, id: \.self) { goal in
+                                    Text(goal)
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(AppTheme.textPrimary)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(AppTheme.cardSurfaceLight)
+                                        .clipShape(Capsule())
+                                        .overlay(Capsule().stroke(AppTheme.border, lineWidth: 0.5))
+                                }
+                            }
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("TRAINING WEEK")
+                            .font(.system(size: 9, weight: .heavy))
+                            .tracking(1.5)
+                            .foregroundStyle(AppTheme.textSecondary)
+                        Text(scheduleSummary(p))
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(AppTheme.cardSurface)
+                    .clipShape(.rect(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.border, lineWidth: 0.5))
+
+                    if p.isYouthMode, !p.parentEmail.isEmpty {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("PARENT / GUARDIAN")
+                                .font(.system(size: 9, weight: .heavy))
+                                .tracking(1.5)
+                                .foregroundStyle(AppTheme.textSecondary)
+                            Text(p.parentEmail)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(AppTheme.textPrimary)
+                            Text("Linked for Expert Coach approvals & safeguarding.")
+                                .font(.system(size: 12))
+                                .foregroundStyle(AppTheme.textTertiary)
+                        }
+                        .padding(14)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(AppTheme.cardSurface)
+                        .clipShape(.rect(cornerRadius: 14))
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.border, lineWidth: 0.5))
+                    }
+                }
+            }
+        }
+    }
+
+    private func profileRow(icon: String, title: String, value: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundStyle(AppTheme.neonGreen)
+                .frame(width: 28, alignment: .center)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title.uppercased())
+                    .font(.system(size: 9, weight: .heavy))
+                    .tracking(1)
+                    .foregroundStyle(AppTheme.textSecondary)
+                Text(value)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
+            }
+            Spacer()
+        }
+        .padding(14)
+        .background(AppTheme.cardSurface)
+        .clipShape(.rect(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.border, lineWidth: 0.5))
+    }
+
+    private func scheduleSummary(_ p: PlayerOnboardingProfile) -> String {
+        let labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        var parts: [String] = []
+        for d in 1...7 {
+            guard let cfg = p.weeklySchedule.byWeekday[d], cfg.isTrainingDay else { continue }
+            var slots: [String] = []
+            if cfg.morning { slots.append("AM") }
+            if cfg.afternoon { slots.append("PM") }
+            if cfg.evening { slots.append("Eve") }
+            if !slots.isEmpty {
+                parts.append("\(labels[d - 1]): \(slots.joined(separator: ", "))")
+            }
+        }
+        return parts.isEmpty ? "—" : parts.joined(separator: " · ")
     }
 
     private var statsOverview: some View {
@@ -336,6 +494,9 @@ struct ProfileView: View {
 
     private var userInitial: String {
         if let name = authViewModel.currentUser?.name, let first = name.first {
+            return String(first).uppercased()
+        }
+        if let n = playerProfile?.displayName, let first = n.first {
             return String(first).uppercased()
         }
         if let email = authViewModel.currentUser?.email, let first = email.first {

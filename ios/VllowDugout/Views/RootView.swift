@@ -7,7 +7,7 @@ struct RootView: View {
         Group {
             switch authViewModel.authState {
             case .onboarding:
-                OnboardingView {
+                OnboardingFlowView {
                     authViewModel.completeOnboarding()
                 }
                 .transition(.opacity)

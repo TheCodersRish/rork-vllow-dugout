@@ -43,6 +43,7 @@ nonisolated enum AppTab: Int, CaseIterable, Sendable {
     case feed
     case coach
     case intel
+    case fuel
     case arena
     case store
 
@@ -51,6 +52,7 @@ nonisolated enum AppTab: Int, CaseIterable, Sendable {
         case .feed: "Feed"
         case .coach: "Coach"
         case .intel: "Intel"
+        case .fuel: "Fuel"
         case .arena: "Arena"
         case .store: "Store"
         }
@@ -61,6 +63,7 @@ nonisolated enum AppTab: Int, CaseIterable, Sendable {
         case .feed: "rectangle.stack.fill"
         case .coach: "brain.head.profile"
         case .intel: "chart.bar.fill"
+        case .fuel: "fork.knife"
         case .arena: "trophy.fill"
         case .store: "bag.fill"
         }
