@@ -1,8 +1,9 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import Foundation
-import Vision
+@preconcurrency import Vision
 
 /// On-device highlight detection: loudness peaks + scoreboard OCR (Vision). No network.
+/// `nonisolated` avoids default `MainActor` isolation (see `SWIFT_DEFAULT_ACTOR_ISOLATION`) so AVFoundation/Vision compile cleanly.
 enum CricketHighlightAnalyzer {
 
     private static let windowSeconds: Double = 0.1
@@ -13,35 +14,37 @@ enum CricketHighlightAnalyzer {
     private static let clipLeadSeconds: Double = 7.0
     private static let clipTrailSeconds: Double = 3.0
 
-    /// `progress` is 0...1 (main-thread friendly — caller can hop to MainActor).
-    static func analyze(
+    /// `progress` is 0...1. `@MainActor` avoids Sendable issues with SwiftUI `@State` updates.
+    nonisolated static func analyze(
         asset: AVAsset,
-        progress: @Sendable @escaping (Double) -> Void
+        progress: @escaping @MainActor (Double) -> Void
     ) async throws -> [HighlightEvent] {
         let duration = try await asset.load(.duration)
         let durationSec = max(CMTimeGetSeconds(duration), 0.1)
 
-        progress(0.05)
+        await progress(0.05)
 
-        let mono = try await extractMonoSamples(asset: asset) { p in
-            progress(0.05 + p * 0.45)
-        }
+        let mono = try await extractMonoSamples(
+            asset: asset,
+            progress: progress,
+            progressBase: 0.05,
+            progressScale: 0.45
+        )
 
-        progress(0.5)
+        await progress(0.5)
 
         let sampleRate = max(Double(mono.count) / durationSec, 8000)
         let peaks = detectAudioPeaks(mono: mono, sampleRate: sampleRate, durationSec: durationSec)
 
-        progress(0.55)
+        await progress(0.55)
 
         let ocrHits = try await scanScoreboardOCR(
             asset: asset,
-            durationSec: durationSec
-        ) { p in
-            progress(0.55 + p * 0.4)
-        }
+            durationSec: durationSec,
+            progress: progress
+        )
 
-        progress(0.98)
+        await progress(0.98)
 
         var merged = mergePeaks(peaks, minSpacing: peakMergeSeconds)
         if merged.isEmpty {
@@ -78,15 +81,17 @@ enum CricketHighlightAnalyzer {
             )
         }
 
-        progress(1.0)
+        await progress(1.0)
         return events.sorted { $0.peakTimeSeconds < $1.peakTimeSeconds }
     }
 
     // MARK: - Audio
 
-    private static func extractMonoSamples(
+    private nonisolated static func extractMonoSamples(
         asset: AVAsset,
-        progress: @Sendable @escaping (Double) -> Void
+        progress: @escaping @MainActor (Double) -> Void,
+        progressBase: Double,
+        progressScale: Double
     ) async throws -> [Float] {
         let tracks = try await asset.loadTracks(withMediaType: .audio)
         guard let track = tracks.first else { return [] }
@@ -151,14 +156,15 @@ enum CricketHighlightAnalyzer {
 
             bytesRead += totalLength
             if bytesRead % 500_000 < totalLength {
-                progress(min(1.0, Double(bytesRead) / Double(estBytes)))
+                let frac = min(1.0, Double(bytesRead) / Double(estBytes))
+                await progress(progressBase + frac * progressScale)
             }
         }
 
         return mono
     }
 
-    private static func detectAudioPeaks(mono: [Float], sampleRate: Double, durationSec: Double) -> [Double] {
+    private nonisolated static func detectAudioPeaks(mono: [Float], sampleRate: Double, durationSec: Double) -> [Double] {
         guard !mono.isEmpty else { return [] }
 
         let windowLen = max(Int(sampleRate * windowSeconds), 256)
@@ -196,7 +202,7 @@ enum CricketHighlightAnalyzer {
         return peakIndices.map { Double($0) * secPerBin }
     }
 
-    private static func mergePeaks(_ peaks: [Double], minSpacing: Double) -> [Double] {
+    private nonisolated static func mergePeaks(_ peaks: [Double], minSpacing: Double) -> [Double] {
         let sorted = peaks.sorted()
         var clusters: [[Double]] = []
         for p in sorted {
@@ -212,15 +218,15 @@ enum CricketHighlightAnalyzer {
 
     // MARK: - Vision OCR
 
-    private struct OCRHit {
+    private struct OCRHit: Sendable {
         let time: Double
         let match: Bool
     }
 
-    private static func scanScoreboardOCR(
+    private nonisolated static func scanScoreboardOCR(
         asset: AVAsset,
         durationSec: Double,
-        progress: @Sendable @escaping (Double) -> Void
+        progress: @escaping @MainActor (Double) -> Void
     ) async throws -> [OCRHit] {
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
@@ -248,14 +254,15 @@ enum CricketHighlightAnalyzer {
             hits.append(OCRHit(time: t, match: match))
 
             n += 1
-            progress(Double(n) / Double(totalSteps))
+            let frac = Double(n) / Double(totalSteps)
+            await progress(0.55 + frac * 0.4)
             t += step
         }
 
         return hits
     }
 
-    private static func cropBottomFraction(_ image: CGImage, fraction: Double) -> CGImage {
+    private nonisolated static func cropBottomFraction(_ image: CGImage, fraction: Double) -> CGImage {
         let w = image.width
         let h = image.height
         let cropH = max(1, Int(Double(h) * fraction))
@@ -264,7 +271,7 @@ enum CricketHighlightAnalyzer {
         return image.cropping(to: rect) ?? image
     }
 
-    private static func recognizeScoreboardText(in image: CGImage) throws -> Bool {
+    private nonisolated static func recognizeScoreboardText(in image: CGImage) throws -> Bool {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .fast
         request.usesLanguageCorrection = false
@@ -280,7 +287,7 @@ enum CricketHighlightAnalyzer {
         return scoreboardHeuristic(combined)
     }
 
-    private static func scoreboardHeuristic(_ text: String) -> Bool {
+    private nonisolated static func scoreboardHeuristic(_ text: String) -> Bool {
         let lower = text.lowercased()
         if lower.contains("wkt") || lower.contains("wicket") { return true }
         if lower.range(of: #"\d+\s*/\s*\d+"#, options: .regularExpression) != nil { return true }

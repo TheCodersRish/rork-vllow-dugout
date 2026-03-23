@@ -1,12 +1,13 @@
 import CoreTransferable
 import Foundation
+import UniformTypeIdentifiers
 
 /// Loads a picked Photos library video into a temporary file URL for AVFoundation.
 struct Movie: Transferable {
     let url: URL
 
-    static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(contentType: .movie) { movie in
+    nonisolated static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(contentType: UTType.movie) { movie in
             SentTransferredFile(movie.url)
         } importing: { received in
             let dest = FileManager.default.temporaryDirectory

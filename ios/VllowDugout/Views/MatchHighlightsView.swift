@@ -201,9 +201,7 @@ struct MatchHighlightsView: View {
             statusText = "Loudness peaks + Vision OCR on the bottom 20% every 2s. Clips are 7s before → 3s after each peak. All local."
 
             let result = try await CricketHighlightAnalyzer.analyze(asset: asset) { p in
-                Task { @MainActor in
-                    progress = p
-                }
+                progress = p
             }
             events = result
             if result.isEmpty {
