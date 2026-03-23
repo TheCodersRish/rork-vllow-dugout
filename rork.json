@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "name": "Vllow Dugout",
+      "path": "ios",
+      "framework": "swift"
+    }
+  ]
+}
