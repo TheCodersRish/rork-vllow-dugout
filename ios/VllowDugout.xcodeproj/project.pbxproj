@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		XX528D1E429C819EC4858EXX /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = XX8A164A1710FD6D9E33FEXX /* FirebaseAuth */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		105FC58A2E9EAD3200EA8BCF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,29 +33,12 @@
 		105FC5932E9EAD3200EA8BCF /* VllowDugoutUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VllowDugoutUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		105FC57C2E9EAD3100EA8BCF /* VllowDugout */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = VllowDugout;
-			sourceTree = "<group>";
-		};
-		105FC58C2E9EAD3200EA8BCF /* VllowDugoutTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = VllowDugoutTests;
-			sourceTree = "<group>";
-		};
-		105FC5962E9EAD3200EA8BCF /* VllowDugoutUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = VllowDugoutUITests;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
-
 /* Begin PBXFrameworksBuildPhase section */
 		105FC5772E9EAD3100EA8BCF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				XX528D1E429C819EC4858EXX /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,6 +57,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		105FC57C2E9EAD3100EA8BCF /* VllowDugout */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VllowDugout;
+			sourceTree = "<group>";
+		};
+		105FC58C2E9EAD3200EA8BCF /* VllowDugoutTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VllowDugoutTests;
+			sourceTree = "<group>";
+		};
+		105FC5962E9EAD3200EA8BCF /* VllowDugoutUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VllowDugoutUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXGroup section */
 		105FC5712E9EAD3100EA8BCF = {
@@ -112,6 +117,7 @@
 			);
 			name = VllowDugout;
 			packageProductDependencies = (
+				XX8A164A1710FD6D9E33FEXX /* FirebaseAuth */,
 			);
 			productName = VllowDugout;
 			productReference = 105FC57A2E9EAD3100EA8BCF /* VllowDugout.app */;
@@ -203,6 +209,9 @@
 				105FC5792E9EAD3100EA8BCF /* VllowDugout */,
 				105FC5882E9EAD3200EA8BCF /* VllowDugoutTests */,
 				105FC5922E9EAD3200EA8BCF /* VllowDugoutUITests */,
+			);
+			packageReferences = (
+				XX9B71512012E8DD248870XX /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 		};
 /* End PBXProject section */
@@ -586,6 +595,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		XX9B71512012E8DD248870XX /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		XX8A164A1710FD6D9E33FEXX /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = XX9B71512012E8DD248870XX /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 105FC5722E9EAD3100EA8BCF /* Project object */;
 }

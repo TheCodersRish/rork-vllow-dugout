@@ -31,6 +31,8 @@ struct ContentView: View {
             feedTab
         case .coach:
             coachTab
+        case .meals:
+            mealsTab
         case .intel:
             intelTab
         case .arena:
@@ -68,6 +70,14 @@ struct ContentView: View {
         VStack(spacing: 0) {
             topBar
             ArenaView(appState: appState)
+        }
+        .background(AppTheme.darkBg)
+    }
+
+    private var mealsTab: some View {
+        VStack(spacing: 0) {
+            topBar
+            MealPlanView(appState: appState)
         }
         .background(AppTheme.darkBg)
     }

@@ -7,6 +7,8 @@ struct AuthView: View {
     @State private var password = ""
     @State private var name = ""
     @State private var confirmPassword = ""
+    @State private var showForgotPassword = false
+    @State private var resetEmail = ""
     @FocusState private var focusedField: AuthField?
 
     var body: some View {
@@ -21,6 +23,11 @@ struct AuthView: View {
 
                     formSection
                         .padding(.horizontal, 24)
+
+                    if !isSignUp {
+                        forgotPasswordButton
+                            .padding(.top, 12)
+                    }
 
                     actionButtons
                         .padding(.horizontal, 24)
@@ -53,6 +60,14 @@ struct AuthView: View {
             }
         } message: {
             Text(authViewModel.errorMessage ?? "Something went wrong")
+        }
+        .alert("Password Reset", isPresented: $authViewModel.showResetSent) {
+            Button("OK") {}
+        } message: {
+            Text("A password reset link has been sent to your email.")
+        }
+        .sheet(isPresented: $showForgotPassword) {
+            forgotPasswordSheet
         }
     }
 
@@ -141,6 +156,17 @@ struct AuthView: View {
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSignUp)
     }
 
+    private var forgotPasswordButton: some View {
+        Button {
+            resetEmail = email
+            showForgotPassword = true
+        } label: {
+            Text("Forgot Password?")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(AppTheme.neonGreen.opacity(0.8))
+        }
+    }
+
     private var actionButtons: some View {
         VStack(spacing: 14) {
             Button {
@@ -187,6 +213,80 @@ struct AuthView: View {
                     .foregroundStyle(AppTheme.neonGreen)
             }
         }
+    }
+
+    private var forgotPasswordSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                VStack(spacing: 8) {
+                    Image(systemName: "envelope.badge.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(AppTheme.neonGreen)
+                        .padding(.bottom, 8)
+
+                    Text("Reset Password")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(AppTheme.textPrimary)
+
+                    Text("Enter your email and we'll send you a link to reset your password.")
+                        .font(.system(size: 14))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                AuthTextField(
+                    icon: "envelope.fill",
+                    placeholder: "Email",
+                    text: $resetEmail,
+                    focusedField: $focusedField,
+                    field: .email
+                )
+                .textContentType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .keyboardType(.emailAddress)
+                .padding(.horizontal, 24)
+
+                Button {
+                    Task {
+                        await authViewModel.sendPasswordReset(email: resetEmail)
+                        showForgotPassword = false
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        if authViewModel.isLoading {
+                            ProgressView()
+                                .tint(Color(red: 0.07, green: 0.07, blue: 0.06))
+                        } else {
+                            Text("Send Reset Link")
+                                .font(.system(size: 17, weight: .bold))
+                        }
+                    }
+                    .foregroundStyle(Color(red: 0.07, green: 0.07, blue: 0.06))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(!resetEmail.isEmpty ? AppTheme.neonGreen : AppTheme.neonGreen.opacity(0.3))
+                    .clipShape(.rect(cornerRadius: 27))
+                }
+                .disabled(resetEmail.isEmpty || authViewModel.isLoading)
+                .padding(.horizontal, 24)
+
+                Spacer()
+            }
+            .padding(.top, 32)
+            .background(AppTheme.darkBg)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showForgotPassword = false } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 22))
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+        .preferredColorScheme(.dark)
     }
 
     private var isFormValid: Bool {

@@ -42,6 +42,7 @@ class AppState {
 nonisolated enum AppTab: Int, CaseIterable, Sendable {
     case feed
     case coach
+    case meals
     case intel
     case arena
     case store
@@ -50,6 +51,7 @@ nonisolated enum AppTab: Int, CaseIterable, Sendable {
         switch self {
         case .feed: "Feed"
         case .coach: "Coach"
+        case .meals: "Meals"
         case .intel: "Intel"
         case .arena: "Arena"
         case .store: "Store"
@@ -60,6 +62,7 @@ nonisolated enum AppTab: Int, CaseIterable, Sendable {
         switch self {
         case .feed: "rectangle.stack.fill"
         case .coach: "brain.head.profile"
+        case .meals: "fork.knife"
         case .intel: "chart.bar.fill"
         case .arena: "trophy.fill"
         case .store: "bag.fill"
