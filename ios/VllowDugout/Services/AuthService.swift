@@ -1,3 +1,4 @@
+import CFNetwork
 import Foundation
 import FirebaseAuth
 
@@ -13,7 +14,13 @@ nonisolated enum AuthError: Error, LocalizedError, Sendable {
     case emailAlreadyExists
     case weakPassword
     case userNotFound
+    case invalidEmail
     case networkError
+    case operationNotAllowed
+    case invalidAPIKey
+    case appNotAuthorized
+    case tooManyRequests
+    case keychainError
     case unknown(String)
 
     var errorDescription: String? {
@@ -22,7 +29,19 @@ nonisolated enum AuthError: Error, LocalizedError, Sendable {
         case .emailAlreadyExists: "An account with this email already exists"
         case .weakPassword: "Password must be at least 6 characters"
         case .userNotFound: "No account found with this email"
-        case .networkError: "Network error. Please check your connection."
+        case .invalidEmail: "That email address doesn't look valid"
+        case .networkError:
+            "Can't reach Firebase. Check internet, disable VPN if it blocks Google, and try again."
+        case .operationNotAllowed:
+            "Email/password sign-in is turned off for this app. In Firebase Console: Authentication → Sign-in method → enable Email/Password."
+        case .invalidAPIKey:
+            "Invalid API key or iOS app setup. In Google Cloud Console, ensure this iOS app's API key allows Identity Toolkit, or re-download GoogleService-Info.plist."
+        case .appNotAuthorized:
+            "This app isn't authorized for Firebase Auth. Confirm the iOS bundle ID in Firebase matches the Xcode target (com.vllowsports.dugout)."
+        case .tooManyRequests:
+            "Too many attempts. Wait a minute and try again."
+        case .keychainError:
+            "Keychain access failed. On Simulator, try Reset Content and Settings; on device, ensure Keychain Sharing isn’t misconfigured."
         case .unknown(let msg): msg
         }
     }
@@ -46,7 +65,7 @@ class FirebaseAuthService {
                 name: name,
                 createdAt: ISO8601DateFormatter().string(from: result.user.metadata.creationDate ?? Date())
             )
-        } catch let error as NSError {
+        } catch {
             throw mapFirebaseError(error)
         }
     }
@@ -60,7 +79,7 @@ class FirebaseAuthService {
                 name: result.user.displayName,
                 createdAt: result.user.metadata.creationDate.map { ISO8601DateFormatter().string(from: $0) }
             )
-        } catch let error as NSError {
+        } catch {
             throw mapFirebaseError(error)
         }
     }
@@ -72,7 +91,7 @@ class FirebaseAuthService {
     func sendPasswordReset(email: String) async throws {
         do {
             try await Auth.auth().sendPasswordReset(withEmail: email)
-        } catch let error as NSError {
+        } catch {
             throw mapFirebaseError(error)
         }
     }
@@ -103,24 +122,61 @@ class FirebaseAuthService {
         }
     }
 
-    private func mapFirebaseError(_ error: NSError) -> AuthError {
-        guard error.domain == AuthErrorDomain else {
-            return .unknown(error.localizedDescription)
+    private func mapFirebaseError(_ error: Error) -> AuthError {
+        var current: NSError? = error as NSError
+        var depth = 0
+        while let ns = current, depth < 8 {
+            depth += 1
+
+            if ns.domain == NSURLErrorDomain || ns.domain == (kCFErrorDomainCFNetwork as String) {
+                return .networkError
+            }
+
+            if ns.domain == AuthErrorDomain, let code = AuthErrorCode(rawValue: ns.code) {
+                switch code {
+                case .emailAlreadyInUse:
+                    return .emailAlreadyExists
+                case .wrongPassword, .invalidCredential:
+                    return .invalidCredentials
+                case .userNotFound:
+                    return .userNotFound
+                case .weakPassword:
+                    return .weakPassword
+                case .invalidEmail:
+                    return .invalidEmail
+                case .networkError, .webNetworkRequestFailed:
+                    return .networkError
+                case .operationNotAllowed:
+                    return .operationNotAllowed
+                case .invalidAPIKey:
+                    return .invalidAPIKey
+                case .appNotAuthorized:
+                    return .appNotAuthorized
+                case .missingIosBundleID:
+                    return .appNotAuthorized
+                case .tooManyRequests:
+                    return .tooManyRequests
+                case .keychainError:
+                    return .keychainError
+                case .internalError, .webInternalError:
+                    if let underlying = ns.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        current = underlying
+                        continue
+                    }
+                    return .unknown(ns.localizedDescription)
+                default:
+                    return .unknown(ns.localizedDescription)
+                }
+            }
+
+            if let underlying = ns.userInfo[NSUnderlyingErrorKey] as? NSError {
+                current = underlying
+                continue
+            }
+
+            return .unknown(ns.localizedDescription)
         }
-        let code = AuthErrorCode(rawValue: error.code)
-        switch code {
-        case .emailAlreadyInUse:
-            return .emailAlreadyExists
-        case .wrongPassword, .invalidCredential:
-            return .invalidCredentials
-        case .userNotFound:
-            return .userNotFound
-        case .weakPassword:
-            return .weakPassword
-        case .networkError:
-            return .networkError
-        default:
-            return .unknown(error.localizedDescription)
-        }
+
+        return .unknown((error as NSError).localizedDescription)
     }
 }
