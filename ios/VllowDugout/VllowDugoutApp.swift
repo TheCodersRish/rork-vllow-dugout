@@ -4,7 +4,7 @@ import FirebaseCore
 
 @main
 struct VllowDugoutApp: App {
-    @State private var authViewModel = AuthViewModel()
+    @State private var authViewModel: AuthViewModel
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -21,6 +21,7 @@ struct VllowDugoutApp: App {
 
     init() {
         FirebaseApp.configure()
+        _authViewModel = State(wrappedValue: AuthViewModel())
     }
 
     var body: some Scene {
