@@ -10,6 +10,7 @@ class CoachViewModel {
     var focusTopic: String = "Front-Foot Precision"
     var sessionMessageCount: Int = 0
     var showQuickActions: Bool = false
+    var customDrills: [UUID: Drill] = [:]
 
     private var appState: AppState?
 
@@ -22,8 +23,10 @@ class CoachViewModel {
         Focus on batting, bowling, fielding technique, mental game, and fitness for cricket. \
         Always be motivating and push the player to improve. Reference specific techniques and drills. \
         \(stats) \
-        When the user asks about a drill or technique, give specific tips they can practice right now. \
-        End responses with a clear next step or suggestion.
+        When the user asks about a drill, technique, or wants to practice something, ALWAYS create a custom drill for them by appending a JSON block at the very end of your reply in this exact format (no other text after it): \
+        <DRILL>{\"title\":\"<short title>\",\"subtitle\":\"<one sentence what they will do>\",\"category\":\"Batting|Bowling|Fielding|Wicketkeeping|Masterclass\",\"difficulty\":\"Beginner|Intermediate|Pro|Elite\",\"durationSeconds\":<60-360>,\"targetHits\":<5-40>,\"coinReward\":<20-80>}</DRILL> \
+        Pick durations and reps appropriate to the player's level. The drill JSON must be valid and on a single line. \
+        End the prose part with a clear next step or suggestion before the DRILL block.
         """
     }
 
@@ -102,16 +105,18 @@ class CoachViewModel {
             let (data, _) = try await URLSession.shared.data(for: request)
 
             if let responseString = parseStreamResponse(data) {
-                let drill = matchDrillForResponse(userText: userText, aiResponse: responseString)
-                let suggestions = generateSuggestions(from: responseString, userText: userText)
+                let (cleanText, customDrill) = extractCustomDrill(from: responseString)
+                if let cd = customDrill { customDrills[cd.id] = cd }
+                let drill = customDrill ?? matchDrillForResponse(userText: userText, aiResponse: cleanText)
+                let suggestions = generateSuggestions(from: cleanText, userText: userText)
                 let aiMessage = ChatMessage(
                     role: .assistant,
-                    content: responseString,
+                    content: cleanText,
                     drillAttachment: drill.map { DrillAttachment.fromDrill($0) },
                     suggestedQuestions: suggestions
                 )
                 messages.append(aiMessage)
-                updateFocusTopic(from: responseString)
+                updateFocusTopic(from: cleanText)
             } else {
                 appendSmartFallback(for: userText)
             }
@@ -226,6 +231,34 @@ class CoachViewModel {
         }
     }
 
+    private func extractCustomDrill(from text: String) -> (String, Drill?) {
+        guard let openRange = text.range(of: "<DRILL>"),
+              let closeRange = text.range(of: "</DRILL>") else {
+            return (text, nil)
+        }
+        let jsonStart = openRange.upperBound
+        let jsonEnd = closeRange.lowerBound
+        guard jsonStart < jsonEnd else { return (text, nil) }
+        let json = String(text[jsonStart..<jsonEnd]).trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleaned = (String(text[..<openRange.lowerBound]) + String(text[closeRange.upperBound...]))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let data = json.data(using: .utf8),
+              let payload = try? JSONDecoder().decode(AIDrillPayload.self, from: data) else {
+            return (cleaned, nil)
+        }
+        let drill = Drill(
+            title: payload.title,
+            subtitle: payload.subtitle,
+            category: DrillCategory(rawValue: payload.category) ?? .batting,
+            difficulty: Difficulty(rawValue: payload.difficulty) ?? .intermediate,
+            durationSeconds: max(60, min(600, payload.durationSeconds)),
+            targetHits: max(3, min(60, payload.targetHits)),
+            coinReward: max(10, min(150, payload.coinReward)),
+            imageURL: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800"
+        )
+        return (cleaned, drill)
+    }
+
     private func parseStreamResponse(_ data: Data) -> String? {
         guard let raw = String(data: data, encoding: .utf8) else { return nil }
 
@@ -244,6 +277,16 @@ class CoachViewModel {
         }
 
         return fullText.isEmpty ? nil : fullText
+    }
+
+    nonisolated private struct AIDrillPayload: Codable, Sendable {
+        let title: String
+        let subtitle: String
+        let category: String
+        let difficulty: String
+        let durationSeconds: Int
+        let targetHits: Int
+        let coinReward: Int
     }
 
     private struct FallbackResponse {

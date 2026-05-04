@@ -413,6 +413,9 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Vllow Dugout uses your health data to track steps, calories, and heart rate for your cricket training insights.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Vllow Dugout saves your cricket training workout data to Apple Health to help you track your fitness progress.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Vllow Dugout uses the camera so you can record drills and review your technique.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Vllow Dugout records audio with your drill videos so you can hear your coaching cues.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Vllow Dugout saves your drill recordings to your photo library so you can revisit them later.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -449,6 +452,9 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Vllow Dugout uses your health data to track steps, calories, and heart rate for your cricket training insights.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Vllow Dugout saves your cricket training workout data to Apple Health to help you track your fitness progress.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Vllow Dugout uses the camera so you can record drills and review your technique.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Vllow Dugout records audio with your drill videos so you can hear your coaching cues.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Vllow Dugout saves your drill recordings to your photo library so you can revisit them later.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

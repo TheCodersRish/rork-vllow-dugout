@@ -4,10 +4,13 @@ struct MealPlanView: View {
     let appState: AppState
     @State private var viewModel = MealPlanViewModel()
     @State private var showGoalPicker = false
+    @State private var showQuestionnaire = false
+    @State private var profileBinding = MealProfile()
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                profileCard
                 goalSelector
                 dietSelector
                 generateButton
@@ -31,6 +34,52 @@ struct MealPlanView: View {
         }
         .scrollIndicators(.hidden)
         .background(AppTheme.darkBg)
+        .sheet(isPresented: $showQuestionnaire) {
+            MealQuestionnaireView(profile: $profileBinding) { saved in
+                viewModel.saveProfile(saved)
+                Task { await viewModel.generateMealPlan() }
+            }
+        }
+        .onAppear { profileBinding = viewModel.profile }
+    }
+
+    private var profileCard: some View {
+        Button {
+            profileBinding = viewModel.profile
+            showQuestionnaire = true
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: viewModel.hasCompletedQuestionnaire ? "person.fill.checkmark" : "person.crop.circle.badge.questionmark")
+                    .font(.system(size: 18))
+                    .foregroundStyle(AppTheme.neonGreen)
+                    .frame(width: 40, height: 40)
+                    .background(AppTheme.neonGreen.opacity(0.12))
+                    .clipShape(Circle())
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(viewModel.hasCompletedQuestionnaire ? "YOUR PROFILE" : "START HERE")
+                        .font(.system(size: 9, weight: .heavy))
+                        .tracking(1.5)
+                        .foregroundStyle(AppTheme.textSecondary)
+                    Text(viewModel.hasCompletedQuestionnaire
+                         ? "\(viewModel.profile.age)y • \(viewModel.profile.weightKg)kg • \(viewModel.profile.activityLevel.rawValue)"
+                         : "Tell us about you to personalise your plan")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
+            .padding(14)
+            .background(AppTheme.cardSurface)
+            .clipShape(.rect(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16).stroke(viewModel.hasCompletedQuestionnaire ? AppTheme.border : AppTheme.neonGreen.opacity(0.4), lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var goalSelector: some View {
@@ -125,7 +174,12 @@ struct MealPlanView: View {
 
     private var generateButton: some View {
         Button {
-            Task { await viewModel.generateMealPlan() }
+            if !viewModel.hasCompletedQuestionnaire {
+                profileBinding = viewModel.profile
+                showQuestionnaire = true
+            } else {
+                Task { await viewModel.generateMealPlan() }
+            }
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: "sparkles")

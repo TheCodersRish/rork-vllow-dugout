@@ -11,16 +11,32 @@ class MealPlanViewModel {
     var errorMessage: String?
     var savedPlans: [MealPlan] = []
     var expandedMealID: UUID?
+    var profile: MealProfile = MealProfile()
+    var hasCompletedQuestionnaire: Bool = false
 
     private let storageKey = "vllow_saved_meal_plans"
     private let dietKey = "vllow_meal_diet_preference"
+    private let profileKey = "vllow_meal_profile_v1"
 
     init() {
         if let raw = UserDefaults.standard.string(forKey: dietKey),
            let saved = DietPreference(rawValue: raw) {
             selectedDiet = saved
         }
+        if let data = UserDefaults.standard.data(forKey: profileKey),
+           let decoded = try? JSONDecoder().decode(MealProfile.self, from: data) {
+            profile = decoded
+            hasCompletedQuestionnaire = true
+        }
         loadSavedPlans()
+    }
+
+    func saveProfile(_ p: MealProfile) {
+        profile = p
+        hasCompletedQuestionnaire = true
+        if let data = try? JSONEncoder().encode(p) {
+            UserDefaults.standard.set(data, forKey: profileKey)
+        }
     }
 
     func setDiet(_ diet: DietPreference) {
@@ -48,8 +64,10 @@ class MealPlanViewModel {
         let dietRules = selectedDiet.promptRules
         let prompt = """
         Generate a detailed daily cricket athlete meal plan for a "\(selectedGoal.rawValue)" day.
+        ATHLETE PROFILE: \(profile.promptDescription).
         DIETARY PREFERENCE: \(selectedDiet.rawValue.uppercased()).
         DIET RULES (MUST FOLLOW STRICTLY — every meal, every ingredient): \(dietRules)
+        Avoid all listed allergies and dislikes. Tune total calories and protein to the athlete's stats and training load.
         Before finalizing, double-check every ingredient list against these rules. If a meal contains a forbidden item, replace it with a compliant alternative.
         Return ONLY a valid JSON object with this exact structure (no markdown, no code fences):
         {

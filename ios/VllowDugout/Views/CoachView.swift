@@ -262,6 +262,12 @@ struct CoachView: View {
 
     private func launchDrill(from attachment: DrillAttachment) {
         if let drillID = attachment.linkedDrillID,
+           let custom = viewModel.customDrills[drillID] {
+            selectedDrill = custom
+            showDrillSession = true
+            return
+        }
+        if let drillID = attachment.linkedDrillID,
            let drill = MockData.drills.first(where: { $0.id == drillID }) {
             selectedDrill = drill
             showDrillSession = true

@@ -14,6 +14,8 @@ struct DrillSessionView: View {
     @State private var currentTipIndex: Int = 0
     @State private var showCountdown: Bool = false
     @State private var countdownValue: Int = 3
+    @State private var showCamera: Bool = false
+    @State private var loggedClipURL: URL?
 
     init(drill: Drill, appState: AppState, isDailyMission: Bool = false) {
         self.drill = drill
@@ -45,6 +47,12 @@ struct DrillSessionView: View {
         .padding(24)
         .background(AppTheme.darkBg)
         .preferredColorScheme(.dark)
+        .fullScreenCover(isPresented: $showCamera) {
+            DrillCameraView(drill: drill) { url in
+                loggedClipURL = url
+                completeSession()
+            }
+        }
     }
 
     private var header: some View {
@@ -393,21 +401,43 @@ struct DrillSessionView: View {
             } else if showCountdown {
                 Color.clear.frame(height: 60)
             } else {
-                Button {
-                    beginCountdown()
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 16))
-                        Text("START SESSION")
-                            .font(.system(size: 15, weight: .bold))
-                            .tracking(1)
+                VStack(spacing: 10) {
+                    Button {
+                        beginCountdown()
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 16))
+                            Text("START SESSION")
+                                .font(.system(size: 15, weight: .bold))
+                                .tracking(1)
+                        }
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 18)
+                        .background(AppTheme.neonGreen)
+                        .clipShape(.rect(cornerRadius: 20))
                     }
-                    .foregroundStyle(.black)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(AppTheme.neonGreen)
-                    .clipShape(.rect(cornerRadius: 20))
+                    Button {
+                        showCamera = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "video.fill")
+                                .font(.system(size: 14))
+                            Text("RECORD WITH CAMERA")
+                                .font(.system(size: 13, weight: .bold))
+                                .tracking(1.5)
+                        }
+                        .foregroundStyle(AppTheme.neonGreen)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(AppTheme.neonGreen.opacity(0.1))
+                        .clipShape(.rect(cornerRadius: 16))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(AppTheme.neonGreen.opacity(0.4), lineWidth: 0.5)
+                        )
+                    }
                 }
             }
         }
