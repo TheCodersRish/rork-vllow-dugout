@@ -1,5 +1,5 @@
 import Foundation
-import FirebaseAuth
+import StytchCore
 
 nonisolated struct AuthUser: Codable, Sendable {
     let id: String
@@ -20,7 +20,7 @@ nonisolated enum AuthError: Error, LocalizedError, Sendable {
         switch self {
         case .invalidCredentials: "Invalid email or password"
         case .emailAlreadyExists: "An account with this email already exists"
-        case .weakPassword: "Password must be at least 6 characters"
+        case .weakPassword: "Password must be at least 8 characters and strong"
         case .userNotFound: "No account found with this email"
         case .networkError: "Network error. Please check your connection."
         case .unknown(let msg): msg
@@ -28,99 +28,124 @@ nonisolated enum AuthError: Error, LocalizedError, Sendable {
     }
 }
 
-class FirebaseAuthService {
+@MainActor
+final class StytchAuthService {
+    private let displayNameKey = "vllow_user_display_name"
+    private var isConfigured = false
+
+    init() {
+        configureIfNeeded()
+    }
+
+    private func configureIfNeeded() {
+        guard !isConfigured else { return }
+        let token = Config.EXPO_PUBLIC_STYTCH_PUBLIC_TOKEN
+        guard !token.isEmpty else { return }
+        StytchClient.configure(configuration: StytchClientConfiguration(publicToken: token))
+        isConfigured = true
+    }
+
     func signUp(email: String, password: String, name: String) async throws -> AuthUser {
-        guard password.count >= 6 else {
-            throw AuthError.weakPassword
-        }
+        configureIfNeeded()
+        guard password.count >= 8 else { throw AuthError.weakPassword }
 
         do {
-            let result = try await Auth.auth().createUser(withEmail: email, password: password)
-            let changeRequest = result.user.createProfileChangeRequest()
-            changeRequest.displayName = name
-            try await changeRequest.commitChanges()
-
-            return AuthUser(
-                id: result.user.uid,
-                email: result.user.email ?? email,
-                name: name,
-                createdAt: ISO8601DateFormatter().string(from: result.user.metadata.creationDate ?? Date())
+            let response = try await StytchClient.passwords.create(
+                parameters: StytchClient.Passwords.PasswordParameters(email: email, password: password)
             )
-        } catch let error as NSError {
-            throw mapFirebaseError(error)
+            let userId = response.wrapped.user.id.rawValue
+            saveDisplayName(name, forUserID: userId)
+            return AuthUser(
+                id: userId,
+                email: email,
+                name: name,
+                createdAt: ISO8601DateFormatter().string(from: Date())
+            )
+        } catch {
+            throw mapStytchError(error)
         }
     }
 
     func signIn(email: String, password: String) async throws -> AuthUser {
+        configureIfNeeded()
         do {
-            let result = try await Auth.auth().signIn(withEmail: email, password: password)
-            return AuthUser(
-                id: result.user.uid,
-                email: result.user.email ?? email,
-                name: result.user.displayName,
-                createdAt: result.user.metadata.creationDate.map { ISO8601DateFormatter().string(from: $0) }
+            let response = try await StytchClient.passwords.authenticate(
+                parameters: StytchClient.Passwords.PasswordParameters(email: email, password: password)
             )
-        } catch let error as NSError {
-            throw mapFirebaseError(error)
+            let userId = response.wrapped.user.id.rawValue
+            let storedName = loadDisplayName(forUserID: userId)
+            return AuthUser(
+                id: userId,
+                email: email,
+                name: storedName,
+                createdAt: ISO8601DateFormatter().string(from: Date())
+            )
+        } catch {
+            throw mapStytchError(error)
         }
     }
 
-    func signOut() throws {
-        try Auth.auth().signOut()
+    func signOut() async throws {
+        configureIfNeeded()
+        do {
+            _ = try await StytchClient.sessions.revoke()
+        } catch {
+            throw mapStytchError(error)
+        }
     }
 
     func sendPasswordReset(email: String) async throws {
+        configureIfNeeded()
         do {
-            try await Auth.auth().sendPasswordReset(withEmail: email)
-        } catch let error as NSError {
-            throw mapFirebaseError(error)
+            _ = try await StytchClient.passwords.resetByEmailStart(
+                parameters: StytchClient.Passwords.ResetByEmailStartParameters(email: email)
+            )
+        } catch {
+            throw mapStytchError(error)
         }
     }
 
-    func getCurrentUser() -> AuthUser? {
-        guard let user = Auth.auth().currentUser else { return nil }
+    func getCurrentUser() async -> AuthUser? {
+        configureIfNeeded()
+        guard let user = StytchClient.user.getSync() else { return nil }
+        let id = user.id.rawValue
+        let email = user.emails.first?.email ?? ""
         return AuthUser(
-            id: user.uid,
-            email: user.email ?? "",
-            name: user.displayName,
-            createdAt: user.metadata.creationDate.map { ISO8601DateFormatter().string(from: $0) }
+            id: id,
+            email: email,
+            name: loadDisplayName(forUserID: id),
+            createdAt: ISO8601DateFormatter().string(from: Date())
         )
     }
 
-    func addAuthStateListener(_ handler: @escaping (AuthUser?) -> Void) -> NSObjectProtocol {
-        return Auth.auth().addStateDidChangeListener { _, firebaseUser in
-            if let user = firebaseUser {
-                let authUser = AuthUser(
-                    id: user.uid,
-                    email: user.email ?? "",
-                    name: user.displayName,
-                    createdAt: user.metadata.creationDate.map { ISO8601DateFormatter().string(from: $0) }
-                )
-                handler(authUser)
-            } else {
-                handler(nil)
-            }
-        }
+    private func saveDisplayName(_ name: String, forUserID id: String) {
+        var dict = UserDefaults.standard.dictionary(forKey: displayNameKey) as? [String: String] ?? [:]
+        dict[id] = name
+        UserDefaults.standard.set(dict, forKey: displayNameKey)
     }
 
-    private func mapFirebaseError(_ error: NSError) -> AuthError {
-        guard error.domain == AuthErrorDomain else {
-            return .unknown(error.localizedDescription)
-        }
-        let code = AuthErrorCode(rawValue: error.code)
-        switch code {
-        case .emailAlreadyInUse:
+    private func loadDisplayName(forUserID id: String) -> String? {
+        let dict = UserDefaults.standard.dictionary(forKey: displayNameKey) as? [String: String] ?? [:]
+        return dict[id]
+    }
+
+    private func mapStytchError(_ error: Error) -> AuthError {
+        let message = error.localizedDescription.lowercased()
+        if message.contains("duplicate") || message.contains("already") {
             return .emailAlreadyExists
-        case .wrongPassword, .invalidCredential:
-            return .invalidCredentials
-        case .userNotFound:
-            return .userNotFound
-        case .weakPassword:
-            return .weakPassword
-        case .networkError:
-            return .networkError
-        default:
-            return .unknown(error.localizedDescription)
         }
+        if message.contains("weak") || message.contains("strength") {
+            return .weakPassword
+        }
+        if message.contains("not found") || message.contains("email_not_found") {
+            return .userNotFound
+        }
+        if message.contains("invalid") || message.contains("incorrect") || message.contains("unauthorized") {
+            return .invalidCredentials
+        }
+        if message.contains("network") || message.contains("offline") {
+            return .networkError
+        }
+        return .unknown(error.localizedDescription)
     }
 }

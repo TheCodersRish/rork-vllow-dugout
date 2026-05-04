@@ -1,5 +1,4 @@
 import SwiftUI
-import FirebaseAuth
 
 @Observable
 @MainActor
@@ -13,13 +12,12 @@ class AuthViewModel {
     var shouldSwitchToSignIn = false
     var showResetSent = false
 
-    private let authService = FirebaseAuthService()
+    private let authService = StytchAuthService()
     private let onboardingKey = "has_completed_onboarding"
-    private var authListener: NSObjectProtocol?
 
     init() {
         hasCompletedOnboarding = UserDefaults.standard.bool(forKey: onboardingKey)
-        setupAuthListener()
+        Task { await restoreSession() }
     }
 
     var authState: AuthFlowState {
@@ -78,11 +76,17 @@ class AuthViewModel {
     }
 
     func signOut() {
-        do {
-            try authService.signOut()
-        } catch {
-            errorMessage = error.localizedDescription
-            showError = true
+        Task {
+            do {
+                try await authService.signOut()
+            } catch {
+                errorMessage = error.localizedDescription
+                showError = true
+            }
+            withAnimation(.easeInOut(duration: 0.4)) {
+                currentUser = nil
+                isAuthenticated = false
+            }
         }
     }
 
@@ -100,26 +104,11 @@ class AuthViewModel {
         }
     }
 
-    private func setupAuthListener() {
-        if let user = authService.getCurrentUser() {
+    private func restoreSession() async {
+        if let user = await authService.getCurrentUser() {
             currentUser = user
-            isAuthenticated = true
-        }
-
-        authListener = authService.addAuthStateListener { [weak self] user in
-            Task { @MainActor in
-                guard let self else { return }
-                if let user {
-                    self.currentUser = user
-                    withAnimation(.easeInOut(duration: 0.4)) {
-                        self.isAuthenticated = true
-                    }
-                } else {
-                    self.currentUser = nil
-                    withAnimation(.easeInOut(duration: 0.4)) {
-                        self.isAuthenticated = false
-                    }
-                }
+            withAnimation(.easeInOut(duration: 0.4)) {
+                isAuthenticated = true
             }
         }
     }

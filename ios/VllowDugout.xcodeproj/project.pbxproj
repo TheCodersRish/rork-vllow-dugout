@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		XX528D1E429C819EC4858EXX /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = XX8A164A1710FD6D9E33FEXX /* FirebaseAuth */; };
+		XX78DBED7724C377136643XX /* StytchCore in Frameworks */ = {isa = PBXBuildFile; productRef = XX73335E79D496CD3FE7D2XX /* StytchCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,7 +38,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				XX528D1E429C819EC4858EXX /* FirebaseAuth in Frameworks */,
+				XX78DBED7724C377136643XX /* StytchCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -117,7 +117,7 @@
 			);
 			name = VllowDugout;
 			packageProductDependencies = (
-				XX8A164A1710FD6D9E33FEXX /* FirebaseAuth */,
+				XX73335E79D496CD3FE7D2XX /* StytchCore */,
 			);
 			productName = VllowDugout;
 			productReference = 105FC57A2E9EAD3100EA8BCF /* VllowDugout.app */;
@@ -211,7 +211,7 @@
 				105FC5922E9EAD3200EA8BCF /* VllowDugoutUITests */,
 			);
 			packageReferences = (
-				XX9B71512012E8DD248870XX /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				XXF7212BE80246E5DB3567XX /* XCRemoteSwiftPackageReference "stytch-ios" */,
 			);
 		};
 /* End PBXProject section */
@@ -597,21 +597,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		XX9B71512012E8DD248870XX /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+		XXF7212BE80246E5DB3567XX /* XCRemoteSwiftPackageReference "stytch-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			repositoryURL = "https://github.com/stytchauth/stytch-ios.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 11.0.0;
+				minimumVersion = 0.50.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		XX8A164A1710FD6D9E33FEXX /* FirebaseAuth */ = {
+		XX73335E79D496CD3FE7D2XX /* StytchCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = XX9B71512012E8DD248870XX /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAuth;
+			package = XXF7212BE80246E5DB3567XX /* XCRemoteSwiftPackageReference "stytch-ios" */;
+			productName = StytchCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import FirebaseCore
 
 @main
 struct VllowDugoutApp: App {
@@ -18,10 +17,6 @@ struct VllowDugoutApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
-
-    init() {
-        FirebaseApp.configure()
-    }
 
     var body: some Scene {
         WindowGroup {

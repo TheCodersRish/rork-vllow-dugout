@@ -9,6 +9,7 @@ struct MealPlanView: View {
         ScrollView {
             VStack(spacing: 20) {
                 goalSelector
+                dietSelector
                 generateButton
 
                 if viewModel.isGenerating {
@@ -76,6 +77,49 @@ struct MealPlanView: View {
             Text(viewModel.selectedGoal.description)
                 .font(.system(size: 12))
                 .foregroundStyle(AppTheme.textTertiary)
+        }
+    }
+
+    private var dietSelector: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: "leaf.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(AppTheme.neonGreen)
+                Text("DIETARY PREFERENCE")
+                    .font(.system(size: 11, weight: .heavy))
+                    .tracking(1.5)
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(DietPreference.allCases, id: \.self) { diet in
+                        Button {
+                            withAnimation(.spring(response: 0.3)) {
+                                viewModel.setDiet(diet)
+                            }
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: diet.icon)
+                                    .font(.system(size: 13))
+                                Text(diet.rawValue)
+                                    .font(.system(size: 13, weight: .bold))
+                            }
+                            .foregroundStyle(viewModel.selectedDiet == diet ? Color(red: 0.07, green: 0.07, blue: 0.06) : AppTheme.textSecondary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(viewModel.selectedDiet == diet ? AppTheme.neonGreen : AppTheme.cardSurface)
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule().stroke(viewModel.selectedDiet == diet ? .clear : AppTheme.border, lineWidth: 0.5)
+                            )
+                        }
+                        .sensoryFeedback(.selection, trigger: viewModel.selectedDiet)
+                    }
+                }
+            }
+            .contentMargins(.horizontal, 0)
         }
     }
 
