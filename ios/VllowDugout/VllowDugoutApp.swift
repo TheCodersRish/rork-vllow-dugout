@@ -1,11 +1,10 @@
 import SwiftUI
 import SwiftData
-import FirebaseAuth
 import FirebaseCore
 
 @main
 struct VllowDugoutApp: App {
-    @State private var authViewModel: AuthViewModel
+    @State private var authViewModel = AuthViewModel()
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -21,21 +20,12 @@ struct VllowDugoutApp: App {
     }()
 
     init() {
-        if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
-           let options = FirebaseOptions(contentsOfFile: path) {
-            FirebaseApp.configure(options: options)
-        } else {
-            FirebaseApp.configure()
-        }
-        _authViewModel = State(wrappedValue: AuthViewModel())
+        FirebaseApp.configure()
     }
 
     var body: some Scene {
         WindowGroup {
             RootView(authViewModel: authViewModel)
-                .onOpenURL { url in
-                    _ = Auth.auth().canHandle(url)
-                }
         }
         .modelContainer(sharedModelContainer)
     }
