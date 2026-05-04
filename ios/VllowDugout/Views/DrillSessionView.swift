@@ -48,8 +48,9 @@ struct DrillSessionView: View {
         .background(AppTheme.darkBg)
         .preferredColorScheme(.dark)
         .fullScreenCover(isPresented: $showCamera) {
-            DrillCameraView(drill: drill) { url in
+            DrillCameraView(drill: drill) { url, autoHits in
                 loggedClipURL = url
+                hitsLanded = max(hitsLanded, autoHits)
                 completeSession()
             }
         }
