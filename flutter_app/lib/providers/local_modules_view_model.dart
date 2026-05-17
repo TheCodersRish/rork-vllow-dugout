@@ -16,6 +16,8 @@ class LocalModulesViewModel extends ChangeNotifier {
   static const _shareDraftsKey = 'share_card_drafts';
   static const _tierKey = 'subscription_tier';
   static const _trialStartKey = 'trial_start';
+  static const _dailyRewardDateKey = 'daily_reward_date';
+  static const _dailyRewardTotalKey = 'daily_reward_total';
 
   final SharedPreferences _prefs;
 
@@ -30,6 +32,8 @@ class LocalModulesViewModel extends ChangeNotifier {
   List<ShareCardDraft> _shareDrafts = [];
   SubscriptionTier _selectedTier = SubscriptionTier.rookie;
   late DateTime _trialStart;
+  String _dailyRewardDate = '';
+  int _dailyRewardTotal = 0;
 
   LocalModulesViewModel(this._prefs) {
     _load();
@@ -47,6 +51,8 @@ class LocalModulesViewModel extends ChangeNotifier {
   List<CommunityPost> get communityPosts => List.unmodifiable(_communityPosts);
   List<ShareCardDraft> get shareDrafts => List.unmodifiable(_shareDrafts);
   SubscriptionTier get selectedTier => _selectedTier;
+  int get dailyRewardTotal => _dailyRewardTotal;
+  int get dailyRewardRemaining => 500 - _dailyRewardTotal;
 
   MentalCheckIn? get latestCheckIn =>
       _mentalCheckIns.isEmpty ? null : _mentalCheckIns.first;
@@ -71,6 +77,49 @@ class LocalModulesViewModel extends ChangeNotifier {
       return 'Confidence needs reps. Pick one controllable skill and finish with three easy wins.';
     }
     return 'Solid mindset baseline. Journal one pressure moment so FR-03 can spot patterns.';
+  }
+
+  List<String> get journalThemes {
+    final combined = _journalEntries
+        .take(6)
+        .map((entry) => entry.response.toLowerCase())
+        .join(' ');
+    final themes = <String>[];
+    if (combined.contains('pressure') || combined.contains('nervous')) {
+      themes.add('Pressure response');
+    }
+    if (combined.contains('spin')) themes.add('Spin confidence');
+    if (combined.contains('fitness') || combined.contains('tired')) {
+      themes.add('Energy management');
+    }
+    if (combined.contains('shot') || combined.contains('drive')) {
+      themes.add('Shot selection');
+    }
+    return themes.isEmpty ? ['Consistency', 'Positive intent'] : themes;
+  }
+
+  int get mentalStreak {
+    if (_mentalCheckIns.isEmpty) return 0;
+    final uniqueDays = _mentalCheckIns
+        .map((checkIn) => _dateStamp(checkIn.createdAt))
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+    var streak = 0;
+    var cursor = DateTime.now();
+    for (final day in uniqueDays) {
+      if (day == _dateStamp(cursor)) {
+        streak++;
+        cursor = cursor.subtract(const Duration(days: 1));
+      } else if (streak == 0 &&
+          day == _dateStamp(cursor.subtract(const Duration(days: 1)))) {
+        streak++;
+        cursor = cursor.subtract(const Duration(days: 2));
+      } else {
+        break;
+      }
+    }
+    return streak;
   }
 
   String get recoveryRecommendation {
@@ -100,6 +149,118 @@ class LocalModulesViewModel extends ChangeNotifier {
         'Mixed greens',
       ];
 
+  Map<String, String> planForPosition(String position) {
+    final lower = position.toLowerCase();
+    if (lower.contains('bowler')) {
+      return {
+        'Power': 'Med-ball slams, split squats, shoulder prehab',
+        'Endurance': '6x60m run-up repeats with walk-back recovery',
+        'Mobility': 'Thoracic rotation, hip flexor flow, ankle rocks',
+        'Movement': 'Bound-to-brace drills and landing control',
+      };
+    }
+    if (lower.contains('wicket')) {
+      return {
+        'Power': 'Lateral bounds, glute bridge holds, cable chops',
+        'Endurance': 'Keeper crouch intervals: 8x45s',
+        'Mobility': 'Adductors, ankles, hips, lower back',
+        'Movement': 'Side-step takes and leg-side collection patterns',
+      };
+    }
+    return {
+      'Power': 'Med-ball throws, jump squats, resisted bat swings',
+      'Endurance': 'Shuttle clusters: 5x(20m/40m/60m)',
+      'Mobility': 'Hips, hamstrings, thoracic rotation',
+      'Movement': 'Crease acceleration + turning mechanics',
+    };
+  }
+
+  List<Map<String, String>> get recipeCards => const [
+        {
+          'title': 'Match Eve Rice Bowl',
+          'subtitle': 'Brown rice, chicken/tofu, greens, olive oil',
+          'callout': 'Slow carbs for tomorrow morning energy',
+        },
+        {
+          'title': 'Hydration Smoothie',
+          'subtitle': 'Banana, yogurt, berries, electrolyte pinch',
+          'callout': 'Good post-session recovery option',
+        },
+        {
+          'title': 'Power Wrap',
+          'subtitle': 'Wholegrain wrap, eggs/paneer, spinach',
+          'callout': 'Portable protein before nets',
+        },
+      ];
+
+  List<Map<String, String>> get coachRoster => const [
+        {
+          'name': 'Coach Maya',
+          'specialty': 'Batting technique',
+          'rating': '4.9',
+          'bio': 'Former academy batting lead. Great with front-foot balance.',
+        },
+        {
+          'name': 'Coach Arjun',
+          'specialty': 'Fast bowling',
+          'rating': '4.8',
+          'bio': 'Run-up, load-up, and injury-safe pace development.',
+        },
+        {
+          'name': 'Coach Priya',
+          'specialty': 'Mental skills',
+          'rating': '5.0',
+          'bio': 'Pressure routines, confidence plans, and journaling review.',
+        },
+      ];
+
+  List<Map<String, String>> get addOns => const [
+        {
+          'name': 'Extra Video Scan',
+          'cost': '350 coins',
+          'limit': 'Adds one Quick Scan credit',
+        },
+        {
+          'name': 'Pro Report PDF',
+          'cost': '900 coins',
+          'limit': 'Unlocks export-ready coach report',
+        },
+        {
+          'name': 'Challenge Pass',
+          'cost': '250 coins',
+          'limit': 'Create one friend challenge',
+        },
+      ];
+
+  List<String> entitlementLimits(SubscriptionTier tier) {
+    return switch (tier) {
+      SubscriptionTier.rookie => [
+          '5 feed cards/day',
+          '2 coach prompts/day',
+          '1 video quick scan/month',
+          'Community read-only',
+        ],
+      SubscriptionTier.dugout => [
+          'Unlimited drills',
+          '25 coach prompts/day',
+          '4 video scans/month',
+          'Share-card creator',
+        ],
+      SubscriptionTier.pavilion => [
+          'Priority AI analysis',
+          'Pro report exports',
+          'Expert review discounts',
+          'Advanced leaderboards',
+        ],
+      SubscriptionTier.nextGen => [
+          'Youth-safe content',
+          'Parent review controls',
+          'Age-group leaderboards',
+          'Sharing consent gates',
+        ],
+    };
+  }
+
   List<String> get unlockedBadges {
     final badges = <String>[];
     if (_mentalCheckIns.isNotEmpty) badges.add('Mindset Starter');
@@ -118,6 +279,17 @@ class LocalModulesViewModel extends ChangeNotifier {
     if (coins >= 5000) return 'Gold';
     if (coins >= 2000) return 'Silver';
     return 'Bronze';
+  }
+
+  int registerReward(int requestedAmount) {
+    _resetDailyCapIfNeeded();
+    if (_dailyRewardTotal >= 500) return 0;
+    final awarded = requestedAmount.clamp(0, 500 - _dailyRewardTotal).toInt();
+    _dailyRewardTotal += awarded;
+    _prefs.setString(_dailyRewardDateKey, _dailyRewardDate);
+    _prefs.setInt(_dailyRewardTotalKey, _dailyRewardTotal);
+    notifyListeners();
+    return awarded;
   }
 
   void addMentalCheckIn({
@@ -222,6 +394,9 @@ class LocalModulesViewModel extends ChangeNotifier {
       priorities: nextStatus == VideoStatus.completed
           ? ['Play closer to body', 'Earlier head position', 'Repeat tempo']
           : current.priorities,
+      drillPrescription: nextStatus == VideoStatus.completed
+          ? 'Spin Detection Drill + 20 front-foot shadow reps'
+          : current.drillPrescription,
     );
     _persistList(_videoItemsKey, _videoItems);
     notifyListeners();
@@ -243,8 +418,11 @@ class LocalModulesViewModel extends ChangeNotifier {
 
   void markReviewDelivered(int index) {
     if (index < 0 || index >= _coachReviewRequests.length) return;
-    _coachReviewRequests[index] =
-        _coachReviewRequests[index].copyWith(delivered: true);
+    _coachReviewRequests[index] = _coachReviewRequests[index].copyWith(
+      delivered: true,
+      feedback:
+          'Coach notes: improve head stillness, hold finish, and repeat 3x focused drill blocks this week.',
+    );
     _persistList(_coachRequestsKey, _coachReviewRequests);
     notifyListeners();
   }
@@ -268,9 +446,24 @@ class LocalModulesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void commentOnPost(int index) {
+    if (index < 0 || index >= _communityPosts.length) return;
+    _communityPosts[index] = _communityPosts[index]
+        .copyWith(comments: _communityPosts[index].comments + 1);
+    _persistList(_communityPostsKey, _communityPosts);
+    notifyListeners();
+  }
+
   void reportPost(int index) {
     if (index < 0 || index >= _communityPosts.length) return;
     _communityPosts[index] = _communityPosts[index].copyWith(reported: true);
+    _persistList(_communityPostsKey, _communityPosts);
+    notifyListeners();
+  }
+
+  void blockPostAuthor(int index) {
+    if (index < 0 || index >= _communityPosts.length) return;
+    _communityPosts[index] = _communityPosts[index].copyWith(blocked: true);
     _persistList(_communityPostsKey, _communityPosts);
     notifyListeners();
   }
@@ -289,6 +482,20 @@ class LocalModulesViewModel extends ChangeNotifier {
       ),
     );
     _trim(_shareDrafts, 20);
+    _persistList(_shareDraftsKey, _shareDrafts);
+    notifyListeners();
+  }
+
+  void saveShareCard(int index) {
+    if (index < 0 || index >= _shareDrafts.length) return;
+    _shareDrafts[index] = _shareDrafts[index].copyWith(saved: true);
+    _persistList(_shareDraftsKey, _shareDrafts);
+    notifyListeners();
+  }
+
+  void markShareCardShared(int index) {
+    if (index < 0 || index >= _shareDrafts.length) return;
+    _shareDrafts[index] = _shareDrafts[index].copyWith(shared: true);
     _persistList(_shareDraftsKey, _shareDrafts);
     notifyListeners();
   }
@@ -336,7 +543,24 @@ class LocalModulesViewModel extends ChangeNotifier {
         ? DateTime.now()
         : DateTime.tryParse(trialStartJson) ?? DateTime.now();
     _prefs.setString(_trialStartKey, _trialStart.toIso8601String());
+    _dailyRewardDate = _prefs.getString(_dailyRewardDateKey) ?? _todayStamp();
+    _dailyRewardTotal = _prefs.getInt(_dailyRewardTotalKey) ?? 0;
+    _resetDailyCapIfNeeded();
   }
+
+  void _resetDailyCapIfNeeded() {
+    final today = _todayStamp();
+    if (_dailyRewardDate == today) return;
+    _dailyRewardDate = today;
+    _dailyRewardTotal = 0;
+    _prefs.setString(_dailyRewardDateKey, _dailyRewardDate);
+    _prefs.setInt(_dailyRewardTotalKey, _dailyRewardTotal);
+  }
+
+  String _todayStamp() => _dateStamp(DateTime.now());
+
+  String _dateStamp(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
   List<T> _loadList<T>(
     String key,
