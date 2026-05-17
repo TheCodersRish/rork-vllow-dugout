@@ -96,10 +96,12 @@ class _CoachScreenState extends State<CoachScreen>
   String _drillTitle(String input) {
     final lower = input.toLowerCase();
     if (lower.contains('cover drive')) return 'Cover Drive Masterclass';
-    if (lower.contains('bowling') || lower.contains('swing'))
+    if (lower.contains('bowling') || lower.contains('swing')) {
       return 'Swing Bowling Drill';
-    if (lower.contains('fielding') || lower.contains('catch'))
+    }
+    if (lower.contains('fielding') || lower.contains('catch')) {
       return 'Fielding Reactions Drill';
+    }
     if (lower.contains('spin')) return 'Spin Bowling Workshop';
     return 'Training Session';
   }
@@ -111,8 +113,9 @@ class _CoachScreenState extends State<CoachScreen>
         lower.contains('spin')) {
       return 'BOWLING \u2022 15M';
     }
-    if (lower.contains('fielding') || lower.contains('catch'))
+    if (lower.contains('fielding') || lower.contains('catch')) {
       return 'FIELDING \u2022 12M';
+    }
     return 'BATTING \u2022 12M 30S';
   }
 

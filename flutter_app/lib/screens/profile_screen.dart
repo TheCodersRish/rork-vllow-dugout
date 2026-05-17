@@ -572,9 +572,9 @@ class _PlayerProfileSectionState extends State<_PlayerProfileSection> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.goldAccent.withOpacity(0.12),
+        color: AppTheme.goldAccent.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.goldAccent.withOpacity(0.25)),
+        border: Border.all(color: AppTheme.goldAccent.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -619,7 +619,7 @@ class _PlayerProfileSectionState extends State<_PlayerProfileSection> {
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            activeColor: AppTheme.neonGreen,
+            activeThumbColor: AppTheme.neonGreen,
             title: const Text(
               'Parent consent received',
               style: TextStyle(
