@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -15,25 +14,43 @@ class DrillTip {
 
 const List<DrillTip> _allTips = [
   DrillTip('Watch the ball right onto the bat face.', DrillCategory.batting),
-  DrillTip('Keep your head still and eyes level through the shot.', DrillCategory.batting),
-  DrillTip('Transfer weight forward on front-foot drives.', DrillCategory.batting),
-  DrillTip('Play the ball under your eyes — don\'t reach.', DrillCategory.batting),
-  DrillTip('Rotate strike to keep the scoreboard ticking.', DrillCategory.batting),
-  DrillTip('Follow through fully — let your arm finish high.', DrillCategory.bowling),
-  DrillTip('Hit the seam consistently for natural movement.', DrillCategory.bowling),
-  DrillTip('Bowl to a plan — set up the batsman over multiple deliveries.', DrillCategory.bowling),
-  DrillTip('Use the crease width to change the angle of delivery.', DrillCategory.bowling),
-  DrillTip('Load up with a strong core and drive from your legs.', DrillCategory.bowling),
-  DrillTip('Attack the ball — don\'t wait for it to come to you.', DrillCategory.fielding),
-  DrillTip('Keep your body behind the ball; soft hands for catching.', DrillCategory.fielding),
-  DrillTip('Always back up the stumps; anticipate the throw.', DrillCategory.fielding),
+  DrillTip('Keep your head still and eyes level through the shot.',
+      DrillCategory.batting),
+  DrillTip(
+      'Transfer weight forward on front-foot drives.', DrillCategory.batting),
+  DrillTip(
+      'Play the ball under your eyes — don\'t reach.', DrillCategory.batting),
+  DrillTip(
+      'Rotate strike to keep the scoreboard ticking.', DrillCategory.batting),
+  DrillTip('Follow through fully — let your arm finish high.',
+      DrillCategory.bowling),
+  DrillTip(
+      'Hit the seam consistently for natural movement.', DrillCategory.bowling),
+  DrillTip('Bowl to a plan — set up the batsman over multiple deliveries.',
+      DrillCategory.bowling),
+  DrillTip('Use the crease width to change the angle of delivery.',
+      DrillCategory.bowling),
+  DrillTip('Load up with a strong core and drive from your legs.',
+      DrillCategory.bowling),
+  DrillTip('Attack the ball — don\'t wait for it to come to you.',
+      DrillCategory.fielding),
+  DrillTip('Keep your body behind the ball; soft hands for catching.',
+      DrillCategory.fielding),
+  DrillTip('Always back up the stumps; anticipate the throw.',
+      DrillCategory.fielding),
   DrillTip('Move early and get low for ground balls.', DrillCategory.fielding),
-  DrillTip('Use a crow-hop for long throws to maintain accuracy.', DrillCategory.fielding),
-  DrillTip('Stay low; rise with the ball for takes above stumps.', DrillCategory.wicketkeeping),
-  DrillTip('Give with the hands — cushion the ball on takes.', DrillCategory.wicketkeeping),
-  DrillTip('Watch the ball off the pitch, not the batsman\'s shot.', DrillCategory.wicketkeeping),
-  DrillTip('Move laterally in small steps — don\'t dive unless forced.', DrillCategory.wicketkeeping),
-  DrillTip('Call loudly for catches; own the area behind the stumps.', DrillCategory.wicketkeeping),
+  DrillTip('Use a crow-hop for long throws to maintain accuracy.',
+      DrillCategory.fielding),
+  DrillTip('Stay low; rise with the ball for takes above stumps.',
+      DrillCategory.wicketkeeping),
+  DrillTip('Give with the hands — cushion the ball on takes.',
+      DrillCategory.wicketkeeping),
+  DrillTip('Watch the ball off the pitch, not the batsman\'s shot.',
+      DrillCategory.wicketkeeping),
+  DrillTip('Move laterally in small steps — don\'t dive unless forced.',
+      DrillCategory.wicketkeeping),
+  DrillTip('Call loudly for catches; own the area behind the stumps.',
+      DrillCategory.wicketkeeping),
 ];
 
 enum SessionPhase { preSession, countdown, active, completed }
@@ -180,7 +197,8 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
                 shape: BoxShape.circle,
                 border: Border.all(color: AppTheme.border, width: 0.5),
               ),
-              child: const Icon(Icons.close, color: AppTheme.textPrimary, size: 20),
+              child: const Icon(Icons.close,
+                  color: AppTheme.textPrimary, size: 20),
             ),
           ),
           const Spacer(),
@@ -259,7 +277,8 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
                     value: 1.0,
                     strokeWidth: 10,
                     backgroundColor: AppTheme.cardSurfaceLight,
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.cardSurfaceLight),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppTheme.cardSurfaceLight),
                   ),
                 ),
                 Column(
@@ -294,9 +313,12 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStatPill(Icons.touch_app, '${widget.drill.targetHits}', 'Target'),
-              _buildStatPill(Icons.timer, widget.drill.durationFormatted, 'Duration'),
-              _buildStatPill(Icons.monetization_on, '+${widget.drill.coinReward}', 'Reward'),
+              _buildStatPill(
+                  Icons.touch_app, '${widget.drill.targetHits}', 'Target'),
+              _buildStatPill(
+                  Icons.timer, widget.drill.durationFormatted, 'Duration'),
+              _buildStatPill(Icons.monetization_on,
+                  '+${widget.drill.coinReward}', 'Reward'),
             ],
           ),
           const SizedBox(height: 32),
@@ -310,7 +332,8 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
             ),
             child: Row(
               children: [
-                const Icon(Icons.psychology, color: AppTheme.goldAccent, size: 22),
+                const Icon(Icons.psychology,
+                    color: AppTheme.goldAccent, size: 22),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -327,8 +350,11 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _tips.isNotEmpty ? _tips[0].text : 'Focus on technique over speed.',
-                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                        _tips.isNotEmpty
+                            ? _tips[0].text
+                            : 'Focus on technique over speed.',
+                        style: const TextStyle(
+                            color: AppTheme.textSecondary, fontSize: 13),
                       ),
                     ],
                   ),
@@ -400,7 +426,8 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
                     value: progress,
                     strokeWidth: 10,
                     backgroundColor: AppTheme.cardSurfaceLight,
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.neonGreen),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppTheme.neonGreen),
                   ),
                 ),
                 Column(
@@ -467,12 +494,14 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.psychology, color: AppTheme.goldAccent, size: 18),
+                      const Icon(Icons.psychology,
+                          color: AppTheme.goldAccent, size: 18),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           _tips[_currentTipIndex % _tips.length].text,
-                          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                          style: const TextStyle(
+                              color: AppTheme.textSecondary, fontSize: 13),
                         ),
                       ),
                     ],
@@ -544,7 +573,8 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.monetization_on, color: AppTheme.goldAccent, size: 18),
+                const Icon(Icons.monetization_on,
+                    color: AppTheme.goldAccent, size: 18),
                 const SizedBox(width: 6),
                 Text(
                   '+${widget.drill.coinReward} V-COINS EARNED',
@@ -596,14 +626,18 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
             ),
             child: Row(
               children: [
-                const Icon(Icons.auto_awesome, color: AppTheme.neonGreen, size: 20),
+                const Icon(Icons.auto_awesome,
+                    color: AppTheme.neonGreen, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     _hitCount >= widget.drill.targetHits
                         ? 'Outstanding session! You exceeded your target. Your consistency is improving — keep pushing.'
                         : 'Good effort! You\'re building muscle memory. Focus on clean repetitions next time.',
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.4),
+                    style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                        height: 1.4),
                   ),
                 ),
               ],
@@ -695,7 +729,8 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
-                  Icon(Icons.videocam_outlined, color: AppTheme.textSecondary, size: 20),
+                  Icon(Icons.videocam_outlined,
+                      color: AppTheme.textSecondary, size: 20),
                   SizedBox(width: 8),
                   Text(
                     'RECORD WITH CAMERA',

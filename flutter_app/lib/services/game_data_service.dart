@@ -34,8 +34,8 @@ class GameDataService {
   final SharedPreferences? _prefs;
 
   int _vCoins;
-  int _winStreak;
-  int _globalRank;
+  final int _winStreak;
+  final int _globalRank;
   int _drillsCompleted;
   final Set<String> _bookmarkedDrills = {};
   final Set<String> _completedDrills = {};
@@ -144,7 +144,8 @@ class GameDataService {
     final recordedMatchesJson = _prefs?.getString(_recordedMatchesKey);
     if (recordedMatchesJson != null) {
       try {
-        final recordedMatches = jsonDecode(recordedMatchesJson) as List<dynamic>;
+        final recordedMatches =
+            jsonDecode(recordedMatchesJson) as List<dynamic>;
         _recordedMatches
           ..clear()
           ..addAll(recordedMatches.map((item) => PerformanceStats.fromJson(

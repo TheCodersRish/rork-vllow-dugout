@@ -29,12 +29,10 @@ class IntelScreen extends StatelessWidget {
                 onTap: () => _openMatchRecorder(context),
               ),
               const SizedBox(height: 24),
-
               if (latestMatch != null) ...[
                 _LatestMatchHero(stats: latestMatch),
                 const SizedBox(height: 24),
               ],
-
               if (matchHistory.isEmpty) ...[
                 _EmptyState(),
               ] else ...[
@@ -42,21 +40,18 @@ class IntelScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 _HeatMapCard(zones: scoringZones),
                 const SizedBox(height: 24),
-
                 if (dismissals.isNotEmpty) ...[
                   const _SectionLabel(text: 'DISMISSAL PATTERN'),
                   const SizedBox(height: 12),
                   _DismissalDonut(patterns: dismissals),
                   const SizedBox(height: 24),
                 ],
-
                 _AiInsightStrip(
                   insight: latestMatch != null
                       ? _getInsight(latestMatch)
                       : 'Play more matches to unlock AI insights.',
                 ),
                 const SizedBox(height: 24),
-
                 const _SectionLabel(text: 'MATCH HISTORY'),
                 const SizedBox(height: 12),
                 ...matchHistory.map(
@@ -106,7 +101,7 @@ class _RecordMatchCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.neonGreen.withOpacity(0.18)),
+        border: Border.all(color: AppTheme.neonGreen.withValues(alpha: 0.18)),
       ),
       child: Row(
         children: [
@@ -114,7 +109,7 @@ class _RecordMatchCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppTheme.neonGreen.withOpacity(0.12),
+              color: AppTheme.neonGreen.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(
@@ -232,7 +227,8 @@ class _LatestMatchHero extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: isPositive
                       ? AppTheme.neonGreen.withOpacity(0.12)
@@ -251,7 +247,8 @@ class _LatestMatchHero extends StatelessWidget {
                     Text(
                       '${isPositive ? '+' : ''}${stats.strikeRateChange.toStringAsFixed(1)}% SR',
                       style: TextStyle(
-                        color: isPositive ? AppTheme.neonGreen : Colors.redAccent,
+                        color:
+                            isPositive ? AppTheme.neonGreen : Colors.redAccent,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -279,7 +276,8 @@ class _LatestMatchHero extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.monetization_on, color: AppTheme.goldAccent, size: 16),
+                const Icon(Icons.monetization_on,
+                    color: AppTheme.goldAccent, size: 16),
                 const SizedBox(width: 6),
                 Text(
                   '+${stats.coinBonus} V-Coins earned',
@@ -519,7 +517,8 @@ class _DonutPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     const strokeWidth = 22.0;
-    final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
+    final rect =
+        Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
 
     var startAngle = -math.pi / 2;
     for (int i = 0; i < patterns.length; i++) {
@@ -535,8 +534,7 @@ class _DonutPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DonutPainter old) =>
-      patterns != old.patterns;
+  bool shouldRepaint(covariant _DonutPainter old) => patterns != old.patterns;
 }
 
 class _AiInsightStrip extends StatelessWidget {
@@ -564,7 +562,8 @@ class _AiInsightStrip extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: AppTheme.neonGreen, width: 1.5),
             ),
-            child: const Icon(Icons.psychology, color: AppTheme.neonGreen, size: 20),
+            child: const Icon(Icons.psychology,
+                color: AppTheme.neonGreen, size: 20),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -670,7 +669,8 @@ class _MatchHistoryItem extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.monetization_on, color: AppTheme.goldAccent, size: 12),
+                    const Icon(Icons.monetization_on,
+                        color: AppTheme.goldAccent, size: 12),
                     const SizedBox(width: 3),
                     Text(
                       '+${stats.coinBonus}',

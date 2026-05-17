@@ -52,7 +52,11 @@ class _MatchRecorderScreenState extends State<MatchRecorderScreen>
   bool get _isValid {
     final runs = int.tryParse(_runsController.text);
     final balls = int.tryParse(_ballsController.text);
-    return runs != null && runs >= 0 && balls != null && balls > 0 && _selectedOpponent.isNotEmpty;
+    return runs != null &&
+        runs >= 0 &&
+        balls != null &&
+        balls > 0 &&
+        _selectedOpponent.isNotEmpty;
   }
 
   double get _strikeRate {
@@ -132,7 +136,8 @@ class _MatchRecorderScreenState extends State<MatchRecorderScreen>
                   shape: BoxShape.circle,
                   border: Border.all(color: AppTheme.border, width: 0.5),
                 ),
-                child: const Icon(Icons.close, color: AppTheme.textPrimary, size: 20),
+                child: const Icon(Icons.close,
+                    color: AppTheme.textPrimary, size: 20),
               ),
             ),
           ),
@@ -197,7 +202,9 @@ class _MatchRecorderScreenState extends State<MatchRecorderScreen>
               width: double.infinity,
               height: 56,
               decoration: BoxDecoration(
-                color: _isValid ? AppTheme.neonGreen : AppTheme.textTertiary.withOpacity(0.3),
+                color: _isValid
+                    ? AppTheme.neonGreen
+                    : AppTheme.textTertiary.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(29),
               ),
               alignment: Alignment.center,
@@ -292,9 +299,11 @@ class _MatchRecorderScreenState extends State<MatchRecorderScreen>
               return GestureDetector(
                 onTap: () => setState(() => _selectedOpponent = opp),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppTheme.neonGreen : AppTheme.cardSurface,
+                    color:
+                        isSelected ? AppTheme.neonGreen : AppTheme.cardSurface,
                     borderRadius: BorderRadius.circular(29),
                     border: Border.all(
                       color: isSelected ? AppTheme.neonGreen : AppTheme.border,
@@ -350,7 +359,8 @@ class _MatchRecorderScreenState extends State<MatchRecorderScreen>
                   color: AppTheme.cardSurface,
                 ),
                 alignment: Alignment.center,
-                child: const Icon(Icons.emoji_events, color: AppTheme.goldAccent, size: 48),
+                child: const Icon(Icons.emoji_events,
+                    color: AppTheme.goldAccent, size: 48),
               ),
             ),
           ),
@@ -374,7 +384,8 @@ class _MatchRecorderScreenState extends State<MatchRecorderScreen>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.monetization_on, color: AppTheme.goldAccent, size: 18),
+                const Icon(Icons.monetization_on,
+                    color: AppTheme.goldAccent, size: 18),
                 const SizedBox(width: 6),
                 Text(
                   '+$_coinsEarned V-COINS',
