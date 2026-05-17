@@ -5,6 +5,7 @@ import 'providers/app_state.dart';
 import 'providers/auth_view_model.dart';
 import 'providers/coach_view_model.dart';
 import 'providers/meal_plan_view_model.dart';
+import 'providers/player_profile_view_model.dart';
 import 'utils/app_theme.dart';
 import 'screens/root_screen.dart';
 
@@ -23,8 +24,10 @@ void main() async {
       providers: [
         ChangeNotifierProvider.value(value: appState),
         ChangeNotifierProvider.value(value: authViewModel),
-        ChangeNotifierProvider(create: (_) => CoachViewModel()..configure(appState)),
+        ChangeNotifierProvider(
+            create: (_) => CoachViewModel(prefs)..configure(appState)),
         ChangeNotifierProvider(create: (_) => MealPlanViewModel(prefs)),
+        ChangeNotifierProvider(create: (_) => PlayerProfileViewModel(prefs)),
       ],
       child: const VllowDugoutApp(),
     ),

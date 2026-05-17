@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/player_profile.dart';
 import '../providers/app_state.dart';
 import '../providers/auth_view_model.dart';
+import '../providers/player_profile_view_model.dart';
 import '../services/health_service.dart';
 import '../utils/app_theme.dart';
 
@@ -56,6 +58,8 @@ class ProfileScreen extends StatelessWidget {
                   _buildCoinsBadge(appState),
                   const SizedBox(height: 24),
                   _buildStatsGrid(appState),
+                  const SizedBox(height: 24),
+                  const _PlayerProfileSection(),
                   const SizedBox(height: 24),
                   _HealthSection(),
                   const SizedBox(height: 16),
@@ -316,6 +320,384 @@ class _HealthSection extends StatefulWidget {
   State<_HealthSection> createState() => _HealthSectionState();
 }
 
+class _PlayerProfileSection extends StatefulWidget {
+  const _PlayerProfileSection();
+
+  @override
+  State<_PlayerProfileSection> createState() => _PlayerProfileSectionState();
+}
+
+class _PlayerProfileSectionState extends State<_PlayerProfileSection> {
+  late final TextEditingController _goalsController;
+  late final TextEditingController _parentEmailController;
+
+  static const _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = context.read<PlayerProfileViewModel>().profile;
+    _goalsController = TextEditingController(text: profile.goals);
+    _parentEmailController =
+        TextEditingController(text: profile.parentEmail ?? '');
+  }
+
+  @override
+  void dispose() {
+    _goalsController.dispose();
+    _parentEmailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDateOfBirth(
+    PlayerProfileViewModel viewModel,
+    PlayerProfile profile,
+  ) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: profile.dateOfBirth ?? DateTime(now.year - 16),
+      firstDate: DateTime(now.year - 80),
+      lastDate: now,
+    );
+    if (picked != null) {
+      viewModel.updateDateOfBirth(picked);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<PlayerProfileViewModel>(
+      builder: (context, viewModel, _) {
+        final profile = viewModel.profile;
+        final isYouthMode = profile.isYouthMode;
+        final dobLabel = profile.dateOfBirth == null
+            ? 'Add date of birth'
+            : '${profile.dateOfBirth!.month}/${profile.dateOfBirth!.day}/${profile.dateOfBirth!.year}';
+
+        if (_goalsController.text != profile.goals) {
+          _goalsController.text = profile.goals;
+        }
+        if (_parentEmailController.text != (profile.parentEmail ?? '')) {
+          _parentEmailController.text = profile.parentEmail ?? '';
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'PLAYER PROFILE',
+              style: TextStyle(
+                color: AppTheme.textTertiary,
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: AppTheme.cardSurface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppTheme.border, width: 0.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ProfileMetric(
+                          label: 'AGE GROUP',
+                          value: profile.ageGroup,
+                          icon: Icons.cake,
+                          color: isYouthMode
+                              ? AppTheme.goldAccent
+                              : AppTheme.neonGreen,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _ProfileMetric(
+                          label: 'POSITION',
+                          value: profile.position.displayName,
+                          icon: Icons.sports_cricket,
+                          color: Colors.blueAccent,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (isYouthMode) ...[
+                    const SizedBox(height: 14),
+                    _buildYouthBanner(profile, viewModel),
+                  ],
+                  const SizedBox(height: 16),
+                  _buildDateButton(dobLabel, () {
+                    _pickDateOfBirth(viewModel, profile);
+                  }),
+                  const SizedBox(height: 12),
+                  _buildDropdown<PlayerPosition>(
+                    label: 'Primary role',
+                    value: profile.position,
+                    values: PlayerPosition.values,
+                    getLabel: (value) => value.displayName,
+                    onChanged: (value) => viewModel.updatePosition(value),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDropdown<ExperienceLevel>(
+                    label: 'Experience',
+                    value: profile.experienceLevel,
+                    values: ExperienceLevel.values,
+                    getLabel: (value) => value.displayName,
+                    onChanged: (value) =>
+                        viewModel.updateExperienceLevel(value),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _goalsController,
+                    minLines: 2,
+                    maxLines: 3,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: viewModel.updateGoals,
+                    onEditingComplete: () {
+                      viewModel.updateGoals(_goalsController.text);
+                      FocusScope.of(context).unfocus();
+                    },
+                    style: const TextStyle(color: AppTheme.textPrimary),
+                    decoration: const InputDecoration(
+                      labelText: 'Training goals',
+                      hintText: 'What should Vllow help you improve?',
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'WEEKLY AVAILABILITY',
+                    style: TextStyle(
+                      color: AppTheme.textTertiary,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _days.map((day) {
+                      final selected = profile.weeklyAvailability.contains(day);
+                      return ChoiceChip(
+                        label: Text(day),
+                        selected: selected,
+                        selectedColor: AppTheme.neonGreen,
+                        backgroundColor: AppTheme.cardSurfaceLight,
+                        labelStyle: TextStyle(
+                          color: selected ? Colors.black : AppTheme.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        onSelected: (_) => viewModel.toggleAvailability(day),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDateButton(String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppTheme.cardSurfaceLight,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.border, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.calendar_month,
+                color: AppTheme.neonGreen, size: 18),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const Spacer(),
+            const Icon(Icons.chevron_right,
+                color: AppTheme.textTertiary, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown<T>({
+    required String label,
+    required T value,
+    required List<T> values,
+    required String Function(T value) getLabel,
+    required ValueChanged<T> onChanged,
+  }) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      dropdownColor: AppTheme.cardSurfaceLight,
+      decoration: InputDecoration(labelText: label),
+      items: values
+          .map(
+            (item) => DropdownMenuItem<T>(
+              value: item,
+              child: Text(getLabel(item)),
+            ),
+          )
+          .toList(),
+      onChanged: (value) {
+        if (value != null) onChanged(value);
+      },
+    );
+  }
+
+  Widget _buildYouthBanner(
+    PlayerProfile profile,
+    PlayerProfileViewModel viewModel,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.goldAccent.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.goldAccent.withOpacity(0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.shield, color: AppTheme.goldAccent, size: 18),
+              SizedBox(width: 8),
+              Text(
+                'YOUTH MODE ACTIVE',
+                style: TextStyle(
+                  color: AppTheme.goldAccent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Content, leaderboards, and sharing can now use age-group guardrails.',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _parentEmailController,
+            keyboardType: TextInputType.emailAddress,
+            style: const TextStyle(color: AppTheme.textPrimary),
+            decoration: const InputDecoration(
+              labelText: 'Parent / guardian email',
+              hintText: 'parent@example.com',
+            ),
+            onSubmitted: (value) => viewModel.updateParentConsent(
+              parentEmail: value,
+              granted: profile.parentConsentGranted,
+            ),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            activeColor: AppTheme.neonGreen,
+            title: const Text(
+              'Parent consent received',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            value: profile.parentConsentGranted,
+            onChanged: (value) => viewModel.updateParentConsent(
+              parentEmail: _parentEmailController.text,
+              granted: value,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileMetric extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _ProfileMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkBg,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: AppTheme.textTertiary,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HealthSectionState extends State<_HealthSection> {
   late HealthService _healthService;
   bool _initialized = false;
@@ -411,8 +793,8 @@ class _HealthSectionState extends State<_HealthSection> {
                     decoration: BoxDecoration(
                       color: Colors.redAccent.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: Colors.redAccent.withOpacity(0.3)),
+                      border:
+                          Border.all(color: Colors.redAccent.withOpacity(0.3)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -444,8 +826,8 @@ class _HealthSectionState extends State<_HealthSection> {
                     decoration: BoxDecoration(
                       color: Colors.blueAccent.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: Colors.blueAccent.withOpacity(0.3)),
+                      border:
+                          Border.all(color: Colors.blueAccent.withOpacity(0.3)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -518,8 +900,8 @@ class _HealthSectionState extends State<_HealthSection> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  _healthMetric(Icons.directions_walk, '${data.steps}',
-                      'Steps', AppTheme.neonGreen),
+                  _healthMetric(Icons.directions_walk, '${data.steps}', 'Steps',
+                      AppTheme.neonGreen),
                   _healthMetric(Icons.local_fire_department,
                       '${data.activeCalories}', 'Active Cal', Colors.orange),
                   _healthMetric(Icons.favorite, '${data.restingHeartRate}',
@@ -536,8 +918,10 @@ class _HealthSectionState extends State<_HealthSection> {
                       Colors.blueAccent),
                   _healthMetric(Icons.timer, '${data.exerciseMinutes}min',
                       'Exercise', Colors.purpleAccent),
-                  _healthMetric(Icons.bedtime,
-                      '${data.sleepHours.toStringAsFixed(1)}h', 'Sleep',
+                  _healthMetric(
+                      Icons.bedtime,
+                      '${data.sleepHours.toStringAsFixed(1)}h',
+                      'Sleep',
                       Colors.indigoAccent),
                 ],
               ),
@@ -561,8 +945,8 @@ class _HealthSectionState extends State<_HealthSection> {
                   color: AppTheme.neonGreen.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.air,
-                    color: AppTheme.neonGreen, size: 20),
+                child:
+                    const Icon(Icons.air, color: AppTheme.neonGreen, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -614,8 +998,7 @@ class _HealthSectionState extends State<_HealthSection> {
     );
   }
 
-  Widget _healthMetric(
-      IconData icon, String value, String label, Color color) {
+  Widget _healthMetric(IconData icon, String value, String label, Color color) {
     return Expanded(
       child: Column(
         children: [

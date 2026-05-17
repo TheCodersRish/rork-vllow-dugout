@@ -7,6 +7,7 @@ import 'package:vllow_dugout/providers/app_state.dart';
 import 'package:vllow_dugout/providers/auth_view_model.dart';
 import 'package:vllow_dugout/providers/coach_view_model.dart';
 import 'package:vllow_dugout/providers/meal_plan_view_model.dart';
+import 'package:vllow_dugout/providers/player_profile_view_model.dart';
 
 void main() {
   testWidgets('Vllow Dugout boots to onboarding', (WidgetTester tester) async {
@@ -23,9 +24,10 @@ void main() {
           ChangeNotifierProvider.value(value: appState),
           ChangeNotifierProvider.value(value: authViewModel),
           ChangeNotifierProvider(
-            create: (_) => CoachViewModel()..configure(appState),
+            create: (_) => CoachViewModel(prefs)..configure(appState),
           ),
           ChangeNotifierProvider(create: (_) => MealPlanViewModel(prefs)),
+          ChangeNotifierProvider(create: (_) => PlayerProfileViewModel(prefs)),
         ],
         child: const VllowDugoutApp(),
       ),

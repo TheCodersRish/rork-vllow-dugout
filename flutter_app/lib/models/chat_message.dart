@@ -31,6 +31,26 @@ class DrillAttachment {
       linkedDrillID: drill.id,
     );
   }
+
+  factory DrillAttachment.fromJson(Map<String, dynamic> json) {
+    return DrillAttachment(
+      title: json['title'] as String,
+      subtitle: json['subtitle'] as String,
+      imageURL: json['imageURL'] as String,
+      duration: json['duration'] as String,
+      linkedDrillID: json['linkedDrillID'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'subtitle': subtitle,
+      'imageURL': imageURL,
+      'duration': duration,
+      'linkedDrillID': linkedDrillID,
+    };
+  }
 }
 
 class ChatMessage {
@@ -50,6 +70,38 @@ class ChatMessage {
     this.suggestedQuestions = const [],
   })  : id = id ?? const Uuid().v4(),
         timestamp = timestamp ?? DateTime.now();
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      id: json['id'] as String?,
+      role: MessageRole.values.firstWhere(
+        (role) => role.name == json['role'],
+        orElse: () => MessageRole.assistant,
+      ),
+      content: json['content'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      drillAttachment: json['drillAttachment'] == null
+          ? null
+          : DrillAttachment.fromJson(
+              Map<String, dynamic>.from(json['drillAttachment'] as Map),
+            ),
+      suggestedQuestions: (json['suggestedQuestions'] as List<dynamic>?)
+              ?.map((question) => question as String)
+              .toList() ??
+          const [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'role': role.name,
+      'content': content,
+      'timestamp': timestamp.toIso8601String(),
+      'drillAttachment': drillAttachment?.toJson(),
+      'suggestedQuestions': suggestedQuestions,
+    };
+  }
 
   @override
   bool operator ==(Object other) =>
