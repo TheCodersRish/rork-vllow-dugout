@@ -102,7 +102,7 @@ class LocalModulesViewModel extends ChangeNotifier {
 
   List<String> get unlockedBadges {
     final badges = <String>[];
-    if (_mentalCheckIns.length >= 1) badges.add('Mindset Starter');
+    if (_mentalCheckIns.isNotEmpty) badges.add('Mindset Starter');
     if (_journalEntries.length >= 3) badges.add('Journal Streak');
     if (_conditioningLogs.length >= 3) badges.add('Iron Crease');
     if (_hydrationGlasses >= 8) badges.add('Hydration Pro');
