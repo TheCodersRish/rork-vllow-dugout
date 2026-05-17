@@ -6,6 +6,7 @@ import 'package:vllow_dugout/main.dart';
 import 'package:vllow_dugout/providers/app_state.dart';
 import 'package:vllow_dugout/providers/auth_view_model.dart';
 import 'package:vllow_dugout/providers/coach_view_model.dart';
+import 'package:vllow_dugout/providers/local_modules_view_model.dart';
 import 'package:vllow_dugout/providers/meal_plan_view_model.dart';
 import 'package:vllow_dugout/providers/player_profile_view_model.dart';
 
@@ -26,6 +27,7 @@ void main() {
           ChangeNotifierProvider(
             create: (_) => CoachViewModel(prefs)..configure(appState),
           ),
+          ChangeNotifierProvider(create: (_) => LocalModulesViewModel(prefs)),
           ChangeNotifierProvider(create: (_) => MealPlanViewModel(prefs)),
           ChangeNotifierProvider(create: (_) => PlayerProfileViewModel(prefs)),
         ],

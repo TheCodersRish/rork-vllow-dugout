@@ -7,6 +7,7 @@ import '../providers/app_state.dart';
 import '../models/drill.dart';
 import '../utils/app_theme.dart';
 import '../utils/mock_data.dart';
+import 'dugout_hub_screen.dart';
 import 'drill_session_screen.dart';
 import 'skills_library_screen.dart';
 
@@ -58,6 +59,15 @@ class FeedScreen extends StatelessWidget {
     );
   }
 
+  void _openDugoutHub(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => const DugoutHubScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
@@ -77,6 +87,8 @@ class FeedScreen extends StatelessWidget {
           child: Column(
             children: [
               _buildMorningPing(appState),
+              const SizedBox(height: 16),
+              _buildDugoutHubCard(context),
               const SizedBox(height: 24),
               _buildSkillTipCard(context, appState, drills.first),
               const SizedBox(height: 24),
@@ -92,6 +104,70 @@ class FeedScreen extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDugoutHubCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _openDugoutHub(context),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppTheme.neonGreen.withValues(alpha: 0.14),
+              AppTheme.cardSurface,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.neonGreen.withValues(alpha: 0.22)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppTheme.neonGreen.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.dashboard_customize,
+                color: AppTheme.neonGreen,
+              ),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Open Dugout Hub',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Mental, S&C, video, community, sharing, entitlements and more.',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 12,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppTheme.neonGreen),
+          ],
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/app_state.dart';
 import 'providers/auth_view_model.dart';
 import 'providers/coach_view_model.dart';
+import 'providers/local_modules_view_model.dart';
 import 'providers/meal_plan_view_model.dart';
 import 'providers/player_profile_view_model.dart';
 import 'utils/app_theme.dart';
@@ -26,6 +27,7 @@ void main() async {
         ChangeNotifierProvider.value(value: authViewModel),
         ChangeNotifierProvider(
             create: (_) => CoachViewModel(prefs)..configure(appState)),
+        ChangeNotifierProvider(create: (_) => LocalModulesViewModel(prefs)),
         ChangeNotifierProvider(create: (_) => MealPlanViewModel(prefs)),
         ChangeNotifierProvider(create: (_) => PlayerProfileViewModel(prefs)),
       ],
