@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../providers/app_state.dart';
 import '../models/chat_message.dart';
+import '../providers/coach_view_model.dart';
 import '../services/ai_coach_service.dart';
 import '../utils/app_theme.dart';
 
@@ -21,21 +21,12 @@ class _CoachScreenState extends State<CoachScreen>
   final FocusNode _focusNode = FocusNode();
 
   bool _isTyping = false;
-  int _sessionCount = 1;
 
-  late final List<ChatMessage> _messages;
   late AnimationController _dotController;
 
   @override
   void initState() {
     super.initState();
-    _messages = [
-      ChatMessage(
-        role: MessageRole.assistant,
-        content:
-            "Welcome to your personal AI coaching session! I'm FR-03, your elite cricket coach. I can help with batting technique, bowling drills, fielding, fitness plans, mental game, and match strategy.\n\nWhat would you like to work on today?",
-      ),
-    ];
     _dotController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -67,21 +58,21 @@ class _CoachScreenState extends State<CoachScreen>
   void _sendMessage(String text) {
     if (text.trim().isEmpty) return;
 
+    final coach = context.read<CoachViewModel>();
     setState(() {
-      _messages.add(ChatMessage(role: MessageRole.user, content: text.trim()));
       _textController.clear();
       _isTyping = true;
     });
+    coach.addUserMessage(text.trim());
     _scrollToBottom();
 
     final delay = 800 + (text.length * 8).clamp(0, 1200);
     Timer(Duration(milliseconds: delay), () {
       if (!mounted) return;
       final response = AiCoachService.generateResponse(text);
-      setState(() {
-        _isTyping = false;
-        _sessionCount++;
-        _messages.add(ChatMessage(
+      final coach = context.read<CoachViewModel>();
+      coach.addAssistantMessage(
+        ChatMessage(
           role: MessageRole.assistant,
           content: response,
           drillAttachment: _shouldAttachDrill(text)
@@ -93,7 +84,10 @@ class _CoachScreenState extends State<CoachScreen>
                   duration: '12M 30S',
                 )
               : null,
-        ));
+        ),
+      );
+      setState(() {
+        _isTyping = false;
       });
       _scrollToBottom();
     });
@@ -102,18 +96,26 @@ class _CoachScreenState extends State<CoachScreen>
   String _drillTitle(String input) {
     final lower = input.toLowerCase();
     if (lower.contains('cover drive')) return 'Cover Drive Masterclass';
-    if (lower.contains('bowling') || lower.contains('swing')) return 'Swing Bowling Drill';
-    if (lower.contains('fielding') || lower.contains('catch')) return 'Fielding Reactions Drill';
+    if (lower.contains('bowling') || lower.contains('swing')) {
+      return 'Swing Bowling Drill';
+    }
+    if (lower.contains('fielding') || lower.contains('catch')) {
+      return 'Fielding Reactions Drill';
+    }
     if (lower.contains('spin')) return 'Spin Bowling Workshop';
     return 'Training Session';
   }
 
   String _drillSubtitle(String input) {
     final lower = input.toLowerCase();
-    if (lower.contains('bowling') || lower.contains('swing') || lower.contains('spin')) {
+    if (lower.contains('bowling') ||
+        lower.contains('swing') ||
+        lower.contains('spin')) {
       return 'BOWLING \u2022 15M';
     }
-    if (lower.contains('fielding') || lower.contains('catch')) return 'FIELDING \u2022 12M';
+    if (lower.contains('fielding') || lower.contains('catch')) {
+      return 'FIELDING \u2022 12M';
+    }
     return 'BATTING \u2022 12M 30S';
   }
 
@@ -128,19 +130,20 @@ class _CoachScreenState extends State<CoachScreen>
 
   @override
   Widget build(BuildContext context) {
+    final coach = context.watch<CoachViewModel>();
     return Scaffold(
       backgroundColor: AppTheme.darkBg,
       body: Column(
         children: [
-          _buildCoachHeader(),
-          Expanded(child: _buildChatMessages()),
+          _buildCoachHeader(coach),
+          Expanded(child: _buildChatMessages(coach.messages)),
           _buildInputBar(),
         ],
       ),
     );
   }
 
-  Widget _buildCoachHeader() {
+  Widget _buildCoachHeader(CoachViewModel coach) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
       decoration: BoxDecoration(
@@ -186,8 +189,21 @@ class _CoachScreenState extends State<CoachScreen>
                 ),
               ),
               const Spacer(),
+              GestureDetector(
+                onTap: coach.messages.length <= 1 ? null : coach.clearHistory,
+                child: const Text(
+                  'RESET',
+                  style: TextStyle(
+                    color: AppTheme.textTertiary,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
               Text(
-                'SESSION $_sessionCount',
+                'SESSION ${coach.sessionCount}',
                 style: const TextStyle(
                   color: AppTheme.textTertiary,
                   fontSize: 9,
@@ -212,25 +228,25 @@ class _CoachScreenState extends State<CoachScreen>
     );
   }
 
-  Widget _buildChatMessages() {
+  Widget _buildChatMessages(List<ChatMessage> messages) {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      itemCount: _messages.length + (_isTyping ? 1 : 0),
+      itemCount: messages.length + (_isTyping ? 1 : 0),
       itemBuilder: (context, index) {
-        if (_isTyping && index == _messages.length) {
+        if (_isTyping && index == messages.length) {
           return Padding(
             padding: EdgeInsets.only(top: index > 0 ? 24 : 0),
             child: _TypingIndicator(controller: _dotController),
           );
         }
-        final msg = _messages[index];
+        final msg = messages[index];
         return Padding(
           padding: EdgeInsets.only(top: index > 0 ? 20 : 0),
           child: _ChatBubble(
             message: msg,
             onSuggestionTap: _sendMessage,
-            showLabel: _shouldShowLabel(index),
+            showLabel: _shouldShowLabel(messages, index),
           ),
         );
       },
@@ -254,7 +270,8 @@ class _CoachScreenState extends State<CoachScreen>
         decoration: BoxDecoration(
           color: AppTheme.cardSurface,
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: AppTheme.border.withOpacity(0.5), width: 0.5),
+          border:
+              Border.all(color: AppTheme.border.withOpacity(0.5), width: 0.5),
         ),
         child: Row(
           children: [
@@ -263,14 +280,17 @@ class _CoachScreenState extends State<CoachScreen>
               child: TextField(
                 controller: _textController,
                 focusNode: _focusNode,
-                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                style:
+                    const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
                 maxLines: null,
                 textInputAction: TextInputAction.send,
                 decoration: const InputDecoration(
                   hintText: 'Ask your coach anything...',
-                  hintStyle: TextStyle(color: AppTheme.textTertiary, fontSize: 15),
+                  hintStyle:
+                      TextStyle(color: AppTheme.textTertiary, fontSize: 15),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 4, vertical: 10),
                   isDense: true,
                 ),
                 onSubmitted: _sendMessage,
@@ -284,7 +304,8 @@ class _CoachScreenState extends State<CoachScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: hasText ? AppTheme.neonGreen : AppTheme.cardSurfaceLight,
+                  color:
+                      hasText ? AppTheme.neonGreen : AppTheme.cardSurfaceLight,
                   shape: BoxShape.circle,
                   boxShadow: hasText
                       ? [
@@ -308,11 +329,11 @@ class _CoachScreenState extends State<CoachScreen>
     );
   }
 
-  bool _shouldShowLabel(int index) {
+  bool _shouldShowLabel(List<ChatMessage> messages, int index) {
     if (index == 0) return true;
-    final msg = _messages[index];
+    final msg = messages[index];
     if (msg.role == MessageRole.user) return false;
-    if (index > 0 && _messages[index - 1].role == MessageRole.user) return true;
+    if (index > 0 && messages[index - 1].role == MessageRole.user) return true;
     return false;
   }
 }
@@ -397,7 +418,6 @@ class _ChatBubble extends StatelessWidget {
           ),
           child: _buildMessageContent(message.content, isUser),
         ),
-
         if (isUser)
           Padding(
             padding: const EdgeInsets.only(top: 6, right: 4),
@@ -409,7 +429,6 @@ class _ChatBubble extends StatelessWidget {
               ),
             ),
           ),
-
         if (message.drillAttachment != null) ...[
           const SizedBox(height: 12),
           _DrillAttachmentCard(attachment: message.drillAttachment!),
@@ -463,7 +482,8 @@ class _ChatBubble extends StatelessWidget {
               children: [
                 const Padding(
                   padding: EdgeInsets.only(top: 8),
-                  child: Icon(Icons.circle, size: 4, color: AppTheme.textTertiary),
+                  child:
+                      Icon(Icons.circle, size: 4, color: AppTheme.textTertiary),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -727,7 +747,8 @@ class _TypingIndicator extends StatelessWidget {
               bottomLeft: Radius.circular(20),
               bottomRight: Radius.circular(20),
             ),
-            border: Border.all(color: AppTheme.border.withOpacity(0.5), width: 0.5),
+            border:
+                Border.all(color: AppTheme.border.withOpacity(0.5), width: 0.5),
           ),
           child: AnimatedBuilder(
             animation: controller,

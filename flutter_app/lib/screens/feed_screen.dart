@@ -8,6 +8,7 @@ import '../models/drill.dart';
 import '../utils/app_theme.dart';
 import '../utils/mock_data.dart';
 import 'drill_session_screen.dart';
+import 'skills_library_screen.dart';
 
 class FeedScreen extends StatelessWidget {
   const FeedScreen({super.key});
@@ -48,6 +49,15 @@ class FeedScreen extends StatelessWidget {
     );
   }
 
+  void _openSkillsLibrary(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => const SkillsLibraryScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
@@ -74,8 +84,8 @@ class FeedScreen extends StatelessWidget {
               const SizedBox(height: 24),
               _buildStatsGlimpse(appState),
               const SizedBox(height: 24),
-              _buildBrowseDrills(
-                  context, appState, browseDrills, completedCount, drills.length),
+              _buildBrowseDrills(context, appState, browseDrills,
+                  completedCount, drills.length),
               if (appState.drillsCompleted > 0) ...[
                 const SizedBox(height: 24),
                 _buildRecentActivity(appState),
@@ -320,8 +330,7 @@ class FeedScreen extends StatelessWidget {
 
   // ── Section 3: Daily Mission ─────────────────────────────────────────
 
-  Widget _buildDailyMission(
-      BuildContext context, Drill drill, bool completed) {
+  Widget _buildDailyMission(BuildContext context, Drill drill, bool completed) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -397,8 +406,7 @@ class FeedScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           GestureDetector(
-            onTap:
-                completed ? null : () => _openDrillSession(context, drill),
+            onTap: completed ? null : () => _openDrillSession(context, drill),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -604,6 +612,30 @@ class FeedScreen extends StatelessWidget {
                   color: AppTheme.neonGreen,
                 ),
               ),
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: () => _openSkillsLibrary(context),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.neonGreen.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: AppTheme.neonGreen.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: const Text(
+                    'BROWSE ALL',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                      color: AppTheme.neonGreen,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
           for (final drill in drills) ...[
@@ -615,8 +647,7 @@ class FeedScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDrillRow(
-      BuildContext context, AppState appState, Drill drill) {
+  Widget _buildDrillRow(BuildContext context, AppState appState, Drill drill) {
     final completed = appState.gameData.isDrillCompleted(drill.id);
 
     return GestureDetector(

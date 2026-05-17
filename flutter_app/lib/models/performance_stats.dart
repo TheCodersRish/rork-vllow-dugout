@@ -6,6 +6,7 @@ class PerformanceStats {
   final double strikeRateChange;
   final String opponent;
   final int coinBonus;
+  final DateTime recordedAt;
 
   PerformanceStats({
     required this.runsScored,
@@ -13,11 +14,34 @@ class PerformanceStats {
     required this.strikeRateChange,
     required this.opponent,
     required this.coinBonus,
-  });
+    DateTime? recordedAt,
+  }) : recordedAt = recordedAt ?? DateTime.now();
+
+  factory PerformanceStats.fromJson(Map<String, dynamic> json) {
+    return PerformanceStats(
+      runsScored: json['runsScored'] as int,
+      ballsFaced: json['ballsFaced'] as int,
+      strikeRateChange: (json['strikeRateChange'] as num).toDouble(),
+      opponent: json['opponent'] as String,
+      coinBonus: json['coinBonus'] as int,
+      recordedAt: DateTime.parse(json['recordedAt'] as String),
+    );
+  }
 
   double get strikeRate {
     if (ballsFaced <= 0) return 0;
     return (runsScored / ballsFaced) * 100;
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'runsScored': runsScored,
+      'ballsFaced': ballsFaced,
+      'strikeRateChange': strikeRateChange,
+      'opponent': opponent,
+      'coinBonus': coinBonus,
+      'recordedAt': recordedAt.toIso8601String(),
+    };
   }
 }
 

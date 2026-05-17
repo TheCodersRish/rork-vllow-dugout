@@ -1,30 +1,40 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vllow_dugout/main.dart';
+import 'package:vllow_dugout/providers/app_state.dart';
+import 'package:vllow_dugout/providers/auth_view_model.dart';
+import 'package:vllow_dugout/providers/coach_view_model.dart';
+import 'package:vllow_dugout/providers/meal_plan_view_model.dart';
+import 'package:vllow_dugout/providers/player_profile_view_model.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Vllow Dugout boots to onboarding', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final appState = AppState();
+    await appState.init(prefs);
+    final authViewModel = AuthViewModel(prefs);
+    await authViewModel.init();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: appState),
+          ChangeNotifierProvider.value(value: authViewModel),
+          ChangeNotifierProvider(
+            create: (_) => CoachViewModel(prefs)..configure(appState),
+          ),
+          ChangeNotifierProvider(create: (_) => MealPlanViewModel(prefs)),
+          ChangeNotifierProvider(create: (_) => PlayerProfileViewModel(prefs)),
+        ],
+        child: const VllowDugoutApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.textContaining('Train Like'), findsOneWidget);
+    expect(find.textContaining('The Elite'), findsOneWidget);
   });
 }
