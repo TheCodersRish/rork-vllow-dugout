@@ -15,7 +15,7 @@ class AuthViewModel extends ChangeNotifier {
   bool _shouldSwitchToSignIn = false;
   bool _showResetSent = false;
 
-  final AuthService _authService = AuthService();
+  late final AuthService _authService;
   static const _onboardingKey = 'has_completed_onboarding';
 
   bool get isAuthenticated => _isAuthenticated;
@@ -51,16 +51,18 @@ class AuthViewModel extends ChangeNotifier {
   final SharedPreferences? _prefs;
 
   AuthViewModel([this._prefs]) {
+    _authService = AuthService(_prefs);
     _loadOnboardingFlag();
     _restoreSession();
   }
 
   Future<void> init() async {
+    await _loadOnboardingFlag();
     await _restoreSession();
   }
 
   Future<void> _loadOnboardingFlag() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = _prefs ?? await SharedPreferences.getInstance();
     _hasCompletedOnboarding = prefs.getBool(_onboardingKey) ?? false;
     notifyListeners();
   }
@@ -68,7 +70,7 @@ class AuthViewModel extends ChangeNotifier {
   Future<void> completeOnboarding() async {
     _hasCompletedOnboarding = true;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = _prefs ?? await SharedPreferences.getInstance();
     await prefs.setBool(_onboardingKey, true);
   }
 

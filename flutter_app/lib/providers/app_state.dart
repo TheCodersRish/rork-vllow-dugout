@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/drill.dart';
+import '../models/performance_stats.dart';
 import '../services/game_data_service.dart';
 
 enum AppTab {
@@ -55,6 +57,21 @@ class AppState extends ChangeNotifier {
 
   bool isBookmarked(String drillId) {
     return _gameData.isBookmarked(drillId);
+  }
+
+  bool completeDrill(Drill drill) {
+    final didComplete = _gameData.completeDrill(drill.id);
+    if (didComplete) {
+      earnCoinsWithFeedback(drill.coinReward, 'Drill completed');
+    } else {
+      notifyListeners();
+    }
+    return didComplete;
+  }
+
+  void recordMatch(PerformanceStats stats) {
+    _gameData.addMatch(stats);
+    earnCoinsWithFeedback(stats.coinBonus, 'Match recorded');
   }
 
   void earnCoinsWithFeedback(int amount, String reason) {

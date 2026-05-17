@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../models/performance_stats.dart';
 import '../providers/app_state.dart';
 import '../utils/app_theme.dart';
 
@@ -71,7 +72,23 @@ class _MatchRecorderScreenState extends State<MatchRecorderScreen>
     if (_strikeRate > 150) coins += 15;
 
     final appState = context.read<AppState>();
-    appState.earnCoinsWithFeedback(coins, 'Match recorded');
+    final latestMatch = appState.gameData.matchHistory.isNotEmpty
+        ? appState.gameData.matchHistory.first
+        : null;
+    final previousStrikeRate = latestMatch?.strikeRate ?? 0;
+    final strikeRateChange = previousStrikeRate > 0
+        ? ((_strikeRate - previousStrikeRate) / previousStrikeRate) * 100
+        : 0.0;
+
+    appState.recordMatch(
+      PerformanceStats(
+        runsScored: runs,
+        ballsFaced: int.parse(_ballsController.text),
+        strikeRateChange: strikeRateChange,
+        opponent: _selectedOpponent,
+        coinBonus: coins,
+      ),
+    );
 
     _trophyAnimController.forward(from: 0);
     setState(() {

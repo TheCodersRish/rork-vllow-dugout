@@ -132,7 +132,7 @@ class _DrillSessionScreenState extends State<DrillSessionScreen>
     _completionAnimController.forward(from: 0);
 
     final appState = context.read<AppState>();
-    appState.earnCoinsWithFeedback(widget.drill.coinReward, 'Drill completed');
+    appState.completeDrill(widget.drill);
 
     setState(() => _phase = SessionPhase.completed);
   }

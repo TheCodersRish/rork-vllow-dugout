@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../models/performance_stats.dart';
 import '../utils/app_theme.dart';
+import 'match_recorder_screen.dart';
 
 class IntelScreen extends StatelessWidget {
   const IntelScreen({super.key});
@@ -24,6 +25,10 @@ class IntelScreen extends StatelessWidget {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               const SizedBox(height: 16),
+              _RecordMatchCard(
+                onTap: () => _openMatchRecorder(context),
+              ),
+              const SizedBox(height: 24),
 
               if (latestMatch != null) ...[
                 _LatestMatchHero(stats: latestMatch),
@@ -77,6 +82,95 @@ class IntelScreen extends StatelessWidget {
       return 'Strike rate dipped ${stats.strikeRateChange.abs().toStringAsFixed(1)}%. Consider rotating strike earlier.';
     }
     return 'Consistent performance. Focus on converting starts into big scores.';
+  }
+
+  static void _openMatchRecorder(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => const MatchRecorderScreen(),
+      ),
+    );
+  }
+}
+
+class _RecordMatchCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _RecordMatchCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.neonGreen.withOpacity(0.18)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppTheme.neonGreen.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.add_chart_rounded,
+              color: AppTheme.neonGreen,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Log match performance',
+                  style: TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Add runs, balls, opponent, and earn V-Coins in Match Centre.',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppTheme.neonGreen,
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: const Text(
+                'LOG',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
