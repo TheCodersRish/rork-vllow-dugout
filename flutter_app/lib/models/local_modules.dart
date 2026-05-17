@@ -168,6 +168,7 @@ class VideoAnalysisItem {
   final VideoStatus status;
   final List<String> strengths;
   final List<String> priorities;
+  final String drillPrescription;
   final DateTime createdAt;
 
   VideoAnalysisItem({
@@ -176,6 +177,7 @@ class VideoAnalysisItem {
     required this.status,
     this.strengths = const [],
     this.priorities = const [],
+    this.drillPrescription = '',
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -195,6 +197,7 @@ class VideoAnalysisItem {
               ?.map((item) => item as String)
               .toList() ??
           const [],
+      drillPrescription: json['drillPrescription'] as String? ?? '',
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
@@ -203,6 +206,7 @@ class VideoAnalysisItem {
     VideoStatus? status,
     List<String>? strengths,
     List<String>? priorities,
+    String? drillPrescription,
   }) {
     return VideoAnalysisItem(
       title: title,
@@ -210,6 +214,7 @@ class VideoAnalysisItem {
       status: status ?? this.status,
       strengths: strengths ?? this.strengths,
       priorities: priorities ?? this.priorities,
+      drillPrescription: drillPrescription ?? this.drillPrescription,
       createdAt: createdAt,
     );
   }
@@ -221,6 +226,7 @@ class VideoAnalysisItem {
       'status': status.name,
       'strengths': strengths,
       'priorities': priorities,
+      'drillPrescription': drillPrescription,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -231,6 +237,7 @@ class CoachReviewRequest {
   final String tier;
   final String notes;
   final bool delivered;
+  final String feedback;
   final DateTime createdAt;
 
   CoachReviewRequest({
@@ -238,6 +245,7 @@ class CoachReviewRequest {
     required this.tier,
     required this.notes,
     this.delivered = false,
+    this.feedback = '',
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -247,16 +255,18 @@ class CoachReviewRequest {
       tier: json['tier'] as String,
       notes: json['notes'] as String? ?? '',
       delivered: json['delivered'] as bool? ?? false,
+      feedback: json['feedback'] as String? ?? '',
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
 
-  CoachReviewRequest copyWith({bool? delivered}) {
+  CoachReviewRequest copyWith({bool? delivered, String? feedback}) {
     return CoachReviewRequest(
       coachName: coachName,
       tier: tier,
       notes: notes,
       delivered: delivered ?? this.delivered,
+      feedback: feedback ?? this.feedback,
       createdAt: createdAt,
     );
   }
@@ -267,6 +277,7 @@ class CoachReviewRequest {
       'tier': tier,
       'notes': notes,
       'delivered': delivered,
+      'feedback': feedback,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -276,14 +287,18 @@ class CommunityPost {
   final String author;
   final String body;
   final int reactions;
+  final int comments;
   final bool reported;
+  final bool blocked;
   final DateTime createdAt;
 
   CommunityPost({
     required this.author,
     required this.body,
     this.reactions = 0,
+    this.comments = 0,
     this.reported = false,
+    this.blocked = false,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -292,17 +307,26 @@ class CommunityPost {
       author: json['author'] as String,
       body: json['body'] as String,
       reactions: json['reactions'] as int? ?? 0,
+      comments: json['comments'] as int? ?? 0,
       reported: json['reported'] as bool? ?? false,
+      blocked: json['blocked'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
 
-  CommunityPost copyWith({int? reactions, bool? reported}) {
+  CommunityPost copyWith({
+    int? reactions,
+    int? comments,
+    bool? reported,
+    bool? blocked,
+  }) {
     return CommunityPost(
       author: author,
       body: body,
       reactions: reactions ?? this.reactions,
+      comments: comments ?? this.comments,
       reported: reported ?? this.reported,
+      blocked: blocked ?? this.blocked,
       createdAt: createdAt,
     );
   }
@@ -312,7 +336,9 @@ class CommunityPost {
       'author': author,
       'body': body,
       'reactions': reactions,
+      'comments': comments,
       'reported': reported,
+      'blocked': blocked,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -322,12 +348,16 @@ class ShareCardDraft {
   final String format;
   final String caption;
   final bool includeStats;
+  final bool saved;
+  final bool shared;
   final DateTime createdAt;
 
   ShareCardDraft({
     required this.format,
     required this.caption,
     required this.includeStats,
+    this.saved = false,
+    this.shared = false,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -336,7 +366,20 @@ class ShareCardDraft {
       format: json['format'] as String,
       caption: json['caption'] as String,
       includeStats: json['includeStats'] as bool? ?? true,
+      saved: json['saved'] as bool? ?? false,
+      shared: json['shared'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+
+  ShareCardDraft copyWith({bool? saved, bool? shared}) {
+    return ShareCardDraft(
+      format: format,
+      caption: caption,
+      includeStats: includeStats,
+      saved: saved ?? this.saved,
+      shared: shared ?? this.shared,
+      createdAt: createdAt,
     );
   }
 
@@ -345,6 +388,8 @@ class ShareCardDraft {
       'format': format,
       'caption': caption,
       'includeStats': includeStats,
+      'saved': saved,
+      'shared': shared,
       'createdAt': createdAt.toIso8601String(),
     };
   }

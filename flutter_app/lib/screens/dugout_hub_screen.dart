@@ -34,6 +34,12 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
   String _reviewTier = 'Standard';
   String _shareFormat = 'Story 9:16';
   bool _includeStats = true;
+  String _ledgerFilter = 'All';
+  String _leaderboardArena = 'Skill Dojo';
+  String _leaderboardPeriod = 'Weekly';
+  String _leaderboardScope = 'Global';
+  String _leaderboardPosition = 'All roles';
+  String _leaderboardAgeGroup = 'Open';
 
   @override
   void dispose() {
@@ -44,6 +50,27 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
     _communityController.dispose();
     _captionController.dispose();
     super.dispose();
+  }
+
+  void _award(
+    LocalModulesViewModel modules,
+    AppState appState,
+    int amount,
+    String reason,
+  ) {
+    final awarded = modules.registerReward(amount);
+    if (awarded > 0) {
+      appState.earnCoinsWithFeedback(awarded, reason);
+    }
+  }
+
+  List<dynamic> _filteredTransactions(AppState appState) {
+    final transactions = appState.gameData.recentCoinTransactions;
+    if (_ledgerFilter == 'All') return transactions;
+    return transactions
+        .where((tx) =>
+            tx.reason.toLowerCase().contains(_ledgerFilter.toLowerCase()))
+        .toList();
   }
 
   @override
@@ -67,9 +94,14 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                   _buildOverview(appState, modules, profile.isYouthMode),
                   const SizedBox(height: 16),
                   _buildMentalSection(modules, appState),
-                  _buildConditioningSection(modules, appState),
+                  _buildConditioningSection(
+                    modules,
+                    appState,
+                    profile.position.displayName,
+                  ),
                   _buildNutritionSection(modules, appState),
                   _buildGamificationSection(modules, appState),
+                  _buildLeaderboardSection(modules),
                   _buildVideoSection(modules, appState),
                   _buildCoachReviewSection(
                       modules, appState, profile.isYouthMode),
@@ -185,6 +217,22 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
       icon: Icons.psychology,
       child: Column(
         children: [
+          Row(
+            children: [
+              _MetricTile(
+                label: 'Streak',
+                value: '${modules.mentalStreak}d',
+                color: AppTheme.neonGreen,
+              ),
+              const SizedBox(width: 10),
+              _MetricTile(
+                label: 'Entries',
+                value: '${modules.journalEntries.length}',
+                color: AppTheme.goldAccent,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           _SliderRow(
               label: 'Mood',
               value: _mood,
@@ -206,8 +254,13 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                 focus: _focus,
                 confidence: _confidence,
               );
-              appState.earnCoinsWithFeedback(15, 'Mindset check-in');
+              _award(modules, appState, 15, 'Mindset check-in');
             },
+          ),
+          const SizedBox(height: 12),
+          const _SafetyNote(
+            text:
+                'Match-day guidance: slow carbs the night before, light breakfast, electrolytes, and simple snacks between innings.',
           ),
           const SizedBox(height: 12),
           TextField(
@@ -228,7 +281,7 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                 _journalController.text,
               );
               _journalController.clear();
-              appState.earnCoinsWithFeedback(20, 'Match journal');
+              _award(modules, appState, 20, 'Match journal');
             },
           ),
           const SizedBox(height: 12),
@@ -239,6 +292,20 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
               'Reset trigger between balls',
             ],
           ),
+          const SizedBox(height: 12),
+          _SectionCaption('AI-style journal themes'),
+          const SizedBox(height: 8),
+          _ToolkitRow(items: modules.journalThemes),
+          const SizedBox(height: 12),
+          _SectionCaption('Saved journal entries'),
+          const SizedBox(height: 8),
+          ...modules.journalEntries.take(3).map(
+                (entry) => _ListRow(
+                  title: DateFormat.MMMd().add_jm().format(entry.createdAt),
+                  subtitle: entry.response,
+                  trailing: 'Saved',
+                ),
+              ),
         ],
       ),
     );
@@ -247,6 +314,7 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
   Widget _buildConditioningSection(
     LocalModulesViewModel modules,
     AppState appState,
+    String position,
   ) {
     return _ModuleCard(
       title: 'Strength & Conditioning',
@@ -256,12 +324,7 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _PlanGrid(
-            plans: const {
-              'Power': 'Med-ball throws + jump squats',
-              'Endurance': '6x60m cricket shuttles',
-              'Mobility': 'Hips, thoracic, hamstrings',
-              'Movement': 'Lateral crease patterns',
-            },
+            plans: modules.planForPosition(position),
           ),
           const SizedBox(height: 12),
           _ChoiceWrap<ConditioningCategory>(
@@ -296,9 +359,20 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                 niggleFlagged: _niggle,
                 notes: _niggle ? 'Auto-recovery recommended' : '',
               );
-              appState.earnCoinsWithFeedback(25, 'S&C session');
+              _award(modules, appState, 25, 'S&C session');
             },
           ),
+          const SizedBox(height: 12),
+          _SectionCaption('Recent session logs'),
+          const SizedBox(height: 8),
+          ...modules.conditioningLogs.take(3).map(
+                (log) => _ListRow(
+                  title: log.category.displayName,
+                  subtitle:
+                      'Effort ${log.effort}/10${log.niggleFlagged ? ' • niggle flagged' : ''}',
+                  trailing: DateFormat.MMMd().format(log.createdAt),
+                ),
+              ),
         ],
       ),
     );
@@ -330,7 +404,7 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                   onTap: () {
                     modules.addHydrationGlass();
                     if (modules.hydrationGlasses == 8) {
-                      appState.earnCoinsWithFeedback(15, 'Hydration goal');
+                      _award(modules, appState, 15, 'Hydration goal');
                     }
                   },
                 ),
@@ -366,11 +440,23 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
             onTap: () {
               modules.addMealLog(_mealController.text, _mealContext);
               _mealController.clear();
-              appState.earnCoinsWithFeedback(10, 'Meal logged');
+              _award(modules, appState, 10, 'Meal logged');
             },
           ),
           const SizedBox(height: 12),
+          _SectionCaption('Grocery list from plan'),
+          const SizedBox(height: 8),
           _ToolkitRow(items: modules.groceryList),
+          const SizedBox(height: 12),
+          _SectionCaption('Recipe cards'),
+          const SizedBox(height: 8),
+          ...modules.recipeCards.map(
+            (recipe) => _ListRow(
+              title: recipe['title']!,
+              subtitle: '${recipe['subtitle']} • ${recipe['callout']}',
+              trailing: 'Recipe',
+            ),
+          ),
         ],
       ),
     );
@@ -401,9 +487,17 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                 value: '\$${(appState.vCoins / 100).toStringAsFixed(0)}',
                 color: AppTheme.neonGreen,
               ),
+              const SizedBox(width: 10),
+              _MetricTile(
+                label: 'Cap left',
+                value: '${modules.dailyRewardRemaining}',
+                color: Colors.blueAccent,
+              ),
             ],
           ),
           const SizedBox(height: 12),
+          _SectionCaption('Badge cabinet'),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -414,14 +508,107 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                 .toList(),
           ),
           const SizedBox(height: 12),
+          _SectionCaption('Transaction ledger'),
+          const SizedBox(height: 8),
+          _ChoiceWrap<String>(
+            values: const ['All', 'Mindset', 'S&C', 'Video', 'Community'],
+            selected: _ledgerFilter,
+            getLabel: (value) => value,
+            onSelected: (value) => setState(() => _ledgerFilter = value),
+          ),
+          const SizedBox(height: 10),
+          ..._filteredTransactions(appState).take(4).map(
+                (tx) => _ListRow(
+                  title: tx.reason.isEmpty ? 'V-Coin activity' : tx.reason,
+                  subtitle: DateFormat.MMMd().add_jm().format(tx.date),
+                  trailing: '+${tx.amount}',
+                ),
+              ),
+          if (_filteredTransactions(appState).isEmpty)
+            const _SafetyNote(
+              text: 'No ledger entries match this filter yet.',
+            ),
+          const SizedBox(height: 12),
           _SecondaryAction(
             label: 'MOCK PERFECT DAY BONUS',
-            onTap: () =>
-                appState.earnCoinsWithFeedback(50, 'Perfect day bonus'),
+            onTap: () => _award(modules, appState, 50, 'Perfect day bonus'),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildLeaderboardSection(LocalModulesViewModel modules) {
+    final rows = _mockLeaderboardRows();
+    return _ModuleCard(
+      title: 'Leaderboards',
+      subtitle:
+          'Five arenas with period, scope, position, and age-group filters.',
+      icon: Icons.leaderboard,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ChoiceWrap<String>(
+            values: const [
+              'Skill Dojo',
+              'Iron Crease',
+              'Mind Games',
+              'Nutrition Nets',
+              'Match Centre',
+            ],
+            selected: _leaderboardArena,
+            getLabel: (value) => value,
+            onSelected: (value) => setState(() => _leaderboardArena = value),
+          ),
+          const SizedBox(height: 10),
+          _ChoiceWrap<String>(
+            values: const ['Weekly', 'Monthly', 'All-time'],
+            selected: _leaderboardPeriod,
+            getLabel: (value) => value,
+            onSelected: (value) => setState(() => _leaderboardPeriod = value),
+          ),
+          const SizedBox(height: 10),
+          _ChoiceWrap<String>(
+            values: const ['Global', 'Regional', 'Club', 'Friends'],
+            selected: _leaderboardScope,
+            getLabel: (value) => value,
+            onSelected: (value) => setState(() => _leaderboardScope = value),
+          ),
+          const SizedBox(height: 10),
+          _ChoiceWrap<String>(
+            values: const ['All roles', 'Batter', 'Bowler', 'Keeper'],
+            selected: _leaderboardPosition,
+            getLabel: (value) => value,
+            onSelected: (value) => setState(() => _leaderboardPosition = value),
+          ),
+          const SizedBox(height: 10),
+          _ChoiceWrap<String>(
+            values: const ['Open', 'U13', 'U15', 'U17', 'U19'],
+            selected: _leaderboardAgeGroup,
+            getLabel: (value) => value,
+            onSelected: (value) => setState(() => _leaderboardAgeGroup = value),
+          ),
+          const SizedBox(height: 12),
+          ...rows.map(
+            (row) => _ListRow(
+              title: '#${row['rank']} ${row['name']}',
+              subtitle:
+                  '$_leaderboardArena • $_leaderboardPeriod • $_leaderboardScope • $_leaderboardPosition • $_leaderboardAgeGroup',
+              trailing: '${row['score']}',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Map<String, String>> _mockLeaderboardRows() {
+    final arenaBonus = _leaderboardArena.length * 7;
+    return [
+      {'rank': '1', 'name': 'Aarav S.', 'score': '${980 + arenaBonus}'},
+      {'rank': '2', 'name': 'Maya P.', 'score': '${910 + arenaBonus}'},
+      {'rank': '3', 'name': 'You', 'score': '${870 + arenaBonus}'},
+    ];
   }
 
   Widget _buildVideoSection(
@@ -458,6 +645,8 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
             },
           ),
           const SizedBox(height: 12),
+          _SectionCaption('Video library & upload queue'),
+          const SizedBox(height: 8),
           ...modules.videoItems.take(3).toList().asMap().entries.map(
                 (entry) => _ListRow(
                   title: entry.value.title,
@@ -469,11 +658,15 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                   onTap: () {
                     modules.advanceVideo(entry.key);
                     if (entry.value.status == VideoStatus.analyzing) {
-                      appState.earnCoinsWithFeedback(30, 'Video analysis');
+                      _award(modules, appState, 30, 'Video analysis');
                     }
                   },
                 ),
               ),
+          ...modules.videoItems
+              .where((item) => item.status == VideoStatus.completed)
+              .take(2)
+              .map((item) => _VideoResultCard(item: item)),
         ],
       ),
     );
@@ -492,6 +685,17 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
       icon: Icons.sports,
       child: Column(
         children: [
+          _SectionCaption('Coach roster'),
+          const SizedBox(height: 8),
+          ...modules.coachRoster.map(
+            (coach) => _ListRow(
+              title: '${coach['name']} • ${coach['rating']}★',
+              subtitle: '${coach['specialty']} — ${coach['bio']}',
+              trailing: coach['name'] == _coachName ? 'Selected' : 'Profile',
+              onTap: () => setState(() => _coachName = coach['name']!),
+            ),
+          ),
+          const SizedBox(height: 10),
           _ChoiceWrap<String>(
             values: const ['Coach Maya', 'Coach Arjun', 'Coach Priya'],
             selected: _coachName,
@@ -525,15 +729,17 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                 notes: _reviewNotesController.text,
               );
               _reviewNotesController.clear();
-              appState.earnCoinsWithFeedback(10, 'Coach request');
+              _award(modules, appState, 10, 'Coach request');
             },
           ),
           const SizedBox(height: 12),
+          _SectionCaption('Submitted requests'),
+          const SizedBox(height: 8),
           ...modules.coachReviewRequests.take(2).toList().asMap().entries.map(
                 (entry) => _ListRow(
                   title: entry.value.coachName,
                   subtitle:
-                      '${entry.value.tier} • ${entry.value.delivered ? 'Feedback delivered' : 'Pending review'}',
+                      '${entry.value.tier} • ${entry.value.delivered ? entry.value.feedback : 'Pending review'}',
                   trailing: entry.value.delivered ? 'Open' : 'Deliver',
                   onTap: () => modules.markReviewDelivered(entry.key),
                 ),
@@ -555,6 +761,10 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const _SafetyNote(
+            text:
+                'No private messaging is available. Community interactions stay in moderated public surfaces.',
+          ),
           if (isYouthMode)
             const _SafetyNote(
               text:
@@ -574,18 +784,17 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
             onTap: () {
               modules.addCommunityPost(_communityController.text);
               _communityController.clear();
-              appState.earnCoinsWithFeedback(10, 'Community post');
+              _award(modules, appState, 10, 'Community post');
             },
           ),
           const SizedBox(height: 12),
           ...modules.communityPosts.take(3).toList().asMap().entries.map(
-                (entry) => _ListRow(
-                  title: entry.value.author,
-                  subtitle:
-                      '${entry.value.body} • ${entry.value.reactions} reactions${entry.value.reported ? ' • reported' : ''}',
-                  trailing: entry.value.reported ? 'Hidden' : 'React',
-                  onTap: () => modules.reactToPost(entry.key),
-                  onLongPress: () => modules.reportPost(entry.key),
+                (entry) => _CommunityPostCard(
+                  post: entry.value,
+                  onReact: () => modules.reactToPost(entry.key),
+                  onComment: () => modules.commentOnPost(entry.key),
+                  onReport: () => modules.reportPost(entry.key),
+                  onBlock: () => modules.blockPostAuthor(entry.key),
                 ),
               ),
         ],
@@ -618,6 +827,7 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
           const SizedBox(height: 10),
           TextField(
             controller: _captionController,
+            onChanged: (_) => setState(() {}),
             style: const TextStyle(color: AppTheme.textPrimary),
             decoration: const InputDecoration(
               labelText: 'Caption',
@@ -634,6 +844,12 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
             value: _includeStats,
             onChanged: (value) => setState(() => _includeStats = value),
           ),
+          _SharePreviewCard(
+            format: _shareFormat,
+            caption: _captionController.text,
+            includeStats: _includeStats,
+          ),
+          const SizedBox(height: 12),
           _PrimaryAction(
             label: 'GENERATE SHARE CARD',
             onTap: () {
@@ -642,16 +858,19 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                 caption: _captionController.text,
                 includeStats: _includeStats,
               );
-              appState.earnCoinsWithFeedback(10, 'Share card');
+              _award(modules, appState, 10, 'Share card');
             },
           ),
           const SizedBox(height: 12),
-          ...modules.shareDrafts.take(2).map(
-                (draft) => _ListRow(
-                  title: draft.format,
+          ...modules.shareDrafts.take(2).toList().asMap().entries.map(
+                (entry) => _ListRow(
+                  title: entry.value.format,
                   subtitle:
-                      '${draft.caption} • ${draft.includeStats ? 'stats on' : 'stats off'}',
-                  trailing: 'Draft',
+                      '${entry.value.caption} • ${entry.value.includeStats ? 'stats on' : 'stats off'} • ${entry.value.saved ? 'saved' : 'not saved'} • ${entry.value.shared ? 'shared' : 'not shared'}',
+                  trailing: entry.value.shared ? 'Shared' : 'Save/Share',
+                  onTap: () => entry.value.saved
+                      ? modules.markShareCardShared(entry.key)
+                      : modules.saveShareCard(entry.key),
                 ),
               ),
         ],
@@ -667,6 +886,12 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
       icon: Icons.lock_open,
       child: Column(
         children: [
+          _SectionCaption('Active entitlement badges / limits'),
+          const SizedBox(height: 8),
+          _ToolkitRow(items: modules.entitlementLimits(modules.selectedTier)),
+          const SizedBox(height: 12),
+          _SectionCaption('Tier comparison'),
+          const SizedBox(height: 8),
           ...SubscriptionTier.values.map(
             (tier) => _ListRow(
               title: tier.displayName,
@@ -674,6 +899,16 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
                   'Coin multiplier x${tier.coinMultiplier} • ${_tierLimits(tier)}',
               trailing: modules.selectedTier == tier ? 'Active' : 'Select',
               onTap: () => modules.selectTier(tier),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SectionCaption('Add-ons catalog'),
+          const SizedBox(height: 8),
+          ...modules.addOns.map(
+            (addOn) => _ListRow(
+              title: addOn['name']!,
+              subtitle: addOn['limit']!,
+              trailing: addOn['cost']!,
             ),
           ),
         ],
@@ -688,6 +923,244 @@ class _DugoutHubScreenState extends State<DugoutHubScreen> {
       SubscriptionTier.pavilion => 'pro reports, priority reviews',
       SubscriptionTier.nextGen => 'youth-safe pro controls',
     };
+  }
+}
+
+class _SectionCaption extends StatelessWidget {
+  final String text;
+
+  const _SectionCaption(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        text.toUpperCase(),
+        style: const TextStyle(
+          color: AppTheme.textTertiary,
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.6,
+        ),
+      ),
+    );
+  }
+}
+
+class _VideoResultCard extends StatelessWidget {
+  final VideoAnalysisItem item;
+
+  const _VideoResultCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.neonGreen.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.neonGreen.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'ANALYSIS RESULT',
+            style: TextStyle(
+              color: AppTheme.neonGreen,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _ToolkitRow(
+              items: item.strengths.map((s) => 'Strength: $s').toList()),
+          const SizedBox(height: 8),
+          _ToolkitRow(
+            items: item.priorities.map((p) => 'Priority: $p').toList(),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Prescription: ${item.drillPrescription}',
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CommunityPostCard extends StatelessWidget {
+  final CommunityPost post;
+  final VoidCallback onReact;
+  final VoidCallback onComment;
+  final VoidCallback onReport;
+  final VoidCallback onBlock;
+
+  const _CommunityPostCard({
+    required this.post,
+    required this.onReact,
+    required this.onComment,
+    required this.onReport,
+    required this.onBlock,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (post.blocked) {
+      return const _ListRow(
+        title: 'Blocked author',
+        subtitle: 'This post is hidden locally.',
+        trailing: 'Blocked',
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkBg,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            post.author,
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            post.reported
+                ? 'Reported locally for moderation review.'
+                : post.body,
+            style: const TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 12,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _SmallAction(label: 'React ${post.reactions}', onTap: onReact),
+              _SmallAction(label: 'Comment ${post.comments}', onTap: onComment),
+              _SmallAction(
+                  label: post.reported ? 'Reported' : 'Report',
+                  onTap: onReport),
+              _SmallAction(label: 'Block', onTap: onBlock),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SharePreviewCard extends StatelessWidget {
+  final String format;
+  final String caption;
+  final bool includeStats;
+
+  const _SharePreviewCard({
+    required this.format,
+    required this.caption,
+    required this.includeStats,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isStory = format.contains('9:16');
+    return Container(
+      width: double.infinity,
+      height: isStory ? 220 : 150,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF172A12), Color(0xFF1F1F1C)],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.neonGreen.withValues(alpha: 0.24)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'VLLOW DUGOUT',
+            style: TextStyle(
+              color: AppTheme.neonGreen,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+            ),
+          ),
+          const Spacer(),
+          if (includeStats)
+            const Text(
+              '72 off 48 • +35 V-Coins • 3-day streak',
+              style: TextStyle(
+                color: AppTheme.goldAccent,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          const SizedBox(height: 8),
+          Text(
+            caption.isEmpty ? '@VllowSports #Dugout' : caption,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SmallAction extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _SmallAction({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: AppTheme.cardSurface,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppTheme.border, width: 0.5),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: AppTheme.textPrimary,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -1063,21 +1536,18 @@ class _ListRow extends StatelessWidget {
   final String subtitle;
   final String trailing;
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
 
   const _ListRow({
     required this.title,
     required this.subtitle,
     required this.trailing,
     this.onTap,
-    this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      onLongPress: onLongPress,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
