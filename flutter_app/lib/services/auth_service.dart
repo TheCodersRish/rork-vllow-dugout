@@ -139,7 +139,7 @@ class AuthService {
   Future<AuthUser> signInWithApple() async {
     if (!_useFirebase) {
       throw AuthException(
-        'Apple sign-in requires Firebase configuration. See AUTH_SETUP.md.',
+        'Paste Firebase keys in lib/config/firebase_config.dart and set enabled = true.',
         AuthErrorType.unknown,
       );
     }

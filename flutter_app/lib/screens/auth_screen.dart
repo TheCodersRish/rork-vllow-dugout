@@ -555,7 +555,7 @@ class _AuthScreenState extends State<AuthScreen>
                       Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: Text(
-                          'Dev mode: configure Firebase to enable Google & Apple sign-in.',
+                          'Set FirebaseConfig.enabled = true and paste keys in lib/config/firebase_config.dart (see AUTH_SETUP.md).',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: AppTheme.textTertiary.withOpacity(0.9),
