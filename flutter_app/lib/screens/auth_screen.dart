@@ -191,6 +191,16 @@ class _AuthScreenState extends State<AuthScreen>
     });
   }
 
+  Future<void> _socialSignIn(Future<void> Function() action) async {
+    final auth = context.read<AuthViewModel>();
+    await action();
+    if (!mounted) return;
+    if (auth.showError && auth.errorMessage != null) {
+      _showErrorSnackbar(auth.errorMessage!);
+      auth.showError = false;
+    }
+  }
+
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
@@ -534,6 +544,26 @@ class _AuthScreenState extends State<AuthScreen>
 
                     const SizedBox(height: 10),
 
+                    if (auth.isFirebaseEnabled) ...[
+                      _SocialAuthSection(
+                        isLoading: auth.isLoading,
+                        onGoogle: () => _socialSignIn(auth.signInWithGoogle),
+                        onApple: () => _socialSignIn(auth.signInWithApple),
+                      ),
+                      const SizedBox(height: 16),
+                    ] else
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          'Dev mode: configure Firebase to enable Google & Apple sign-in.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppTheme.textTertiary.withOpacity(0.9),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+
                     SizedBox(
                       width: double.infinity,
                       height: 58,
@@ -617,6 +647,162 @@ class _AuthScreenState extends State<AuthScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SocialAuthSection extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback onGoogle;
+  final VoidCallback onApple;
+
+  const _SocialAuthSection({
+    required this.isLoading,
+    required this.onGoogle,
+    required this.onApple,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: Divider(color: AppTheme.border.withOpacity(0.6))),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                'OR',
+                style: TextStyle(
+                  color: AppTheme.textTertiary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+            Expanded(child: Divider(color: AppTheme.border.withOpacity(0.6))),
+          ],
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: OutlinedButton.icon(
+            onPressed: isLoading ? null : onGoogle,
+            icon: const Icon(Icons.g_mobiledata, size: 28),
+            label: const Text(
+              'Continue with Google',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.textPrimary,
+              side: BorderSide(color: AppTheme.border.withOpacity(0.8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: OutlinedButton.icon(
+            onPressed: isLoading ? null : onApple,
+            icon: const Icon(Icons.apple, size: 22),
+            label: const Text(
+              'Continue with Apple',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.textPrimary,
+              side: BorderSide(color: AppTheme.border.withOpacity(0.8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SocialAuthSection extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback onGoogle;
+  final VoidCallback onApple;
+
+  const _SocialAuthSection({
+    required this.isLoading,
+    required this.onGoogle,
+    required this.onApple,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: Divider(color: AppTheme.border.withOpacity(0.6))),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                'OR',
+                style: TextStyle(
+                  color: AppTheme.textTertiary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+            Expanded(child: Divider(color: AppTheme.border.withOpacity(0.6))),
+          ],
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: OutlinedButton.icon(
+            onPressed: isLoading ? null : onGoogle,
+            icon: const Icon(Icons.g_mobiledata, size: 28),
+            label: const Text(
+              'Continue with Google',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.textPrimary,
+              side: BorderSide(color: AppTheme.border.withOpacity(0.8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: OutlinedButton.icon(
+            onPressed: isLoading ? null : onApple,
+            icon: const Icon(Icons.apple, size: 22),
+            label: const Text(
+              'Continue with Apple',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.textPrimary,
+              side: BorderSide(color: AppTheme.border.withOpacity(0.8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
