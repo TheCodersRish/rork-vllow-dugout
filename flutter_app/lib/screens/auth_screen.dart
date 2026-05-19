@@ -458,107 +458,107 @@ class _AuthScreenState extends State<AuthScreen>
                     ),
                     const SizedBox(height: 36),
 
-                    if (_isSignUp) ...[
-                      _AuthTextField(
-                        controller: _nameController,
-                        placeholder: 'Full Name',
-                        icon: Icons.person_outline,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Name is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-
-                    _AuthTextField(
-                      controller: _emailController,
-                      placeholder: 'Email',
-                      icon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return 'Email is required';
-                        }
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-                          return 'Enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 14),
-
-                    _AuthTextField(
-                      controller: _passwordController,
-                      placeholder: 'Password',
-                      icon: Icons.lock_outline,
-                      isSecure: true,
-                      obscureText: _obscurePassword,
-                      onToggleObscure: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) {
-                          return 'Password is required';
-                        }
-                        if (v.length < 6) return 'At least 6 characters';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 14),
-
-                    if (_isSignUp) ...[
-                      _AuthTextField(
-                        controller: _confirmController,
-                        placeholder: 'Confirm Password',
-                        icon: Icons.lock_outline,
-                        isSecure: true,
-                        obscureText: _obscureConfirm,
-                        onToggleObscure: () =>
-                            setState(() => _obscureConfirm = !_obscureConfirm),
-                        validator: (v) {
-                          if (_isSignUp && v != _passwordController.text) {
-                            return 'Passwords don\'t match';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-
-                    if (!_isSignUp)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _showForgotPassword,
-                          child: const Text(
-                            'Forgot Password?',
-                            style: TextStyle(
-                              color: AppTheme.neonGreen,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
+                    if (auth.isKindeEnabled) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: Text(
+                          _isSignUp
+                              ? 'You\'ll create your account on Kinde\'s secure sign-up page (email, Google, or Apple — whatever you enabled in the Kinde dashboard).'
+                              : 'You\'ll sign in on Kinde\'s secure page. Use Forgot password there if needed.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppTheme.textTertiary.withOpacity(0.95),
+                            fontSize: 13,
+                            height: 1.4,
                           ),
                         ),
                       ),
-
-                    const SizedBox(height: 10),
-
-                    if (auth.isClerkEnabled) ...[
-                      _SocialAuthSection(
-                        isLoading: auth.isLoading,
-                        onGoogle: () =>
-                            _socialSignIn(auth.signInWithGoogle),
-                        onApple: () =>
-                            _socialSignIn(auth.signInWithApple),
+                    ] else ...[
+                      if (_isSignUp) ...[
+                        _AuthTextField(
+                          controller: _nameController,
+                          placeholder: 'Full Name',
+                          icon: Icons.person_outline,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Name is required';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+                      _AuthTextField(
+                        controller: _emailController,
+                        placeholder: 'Email',
+                        icon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Email is required';
+                          }
+                          if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
+                            return 'Enter a valid email';
+                          }
+                          return null;
+                        },
                       ),
-                      const SizedBox(height: 16),
-                    ] else
+                      const SizedBox(height: 14),
+                      _AuthTextField(
+                        controller: _passwordController,
+                        placeholder: 'Password',
+                        icon: Icons.lock_outline,
+                        isSecure: true,
+                        obscureText: _obscurePassword,
+                        onToggleObscure: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Password is required';
+                          }
+                          if (v.length < 6) return 'At least 6 characters';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      if (_isSignUp) ...[
+                        _AuthTextField(
+                          controller: _confirmController,
+                          placeholder: 'Confirm Password',
+                          icon: Icons.lock_outline,
+                          isSecure: true,
+                          obscureText: _obscureConfirm,
+                          onToggleObscure: () => setState(
+                              () => _obscureConfirm = !_obscureConfirm),
+                          validator: (v) {
+                            if (_isSignUp && v != _passwordController.text) {
+                              return 'Passwords don\'t match';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+                      if (!_isSignUp)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _showForgotPassword,
+                            child: const Text(
+                              'Forgot Password?',
+                              style: TextStyle(
+                                color: AppTheme.neonGreen,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 10),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: Text(
-                          'Email sign-in works in demo mode. For Google/Apple, set ClerkConfig.enabled = true and paste your publishable key in lib/config/clerk_config.dart (see CLERK_SETUP.md).',
+                          'Demo mode: local email sign-in only. Set KindeConfig.enabled = true and paste your Kinde keys in lib/config/kinde_config.dart (see KINDE_SETUP.md).',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: AppTheme.textTertiary.withOpacity(0.9),
@@ -566,6 +566,7 @@ class _AuthScreenState extends State<AuthScreen>
                           ),
                         ),
                       ),
+                    ],
 
                     SizedBox(
                       width: double.infinity,

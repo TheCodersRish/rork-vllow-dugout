@@ -1,9 +1,9 @@
-import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:kinde_flutter_sdk/kinde_flutter_sdk.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'config/clerk_config.dart';
+import 'config/kinde_config.dart';
 import 'providers/app_state.dart';
 import 'providers/auth_view_model.dart';
 import 'providers/coach_view_model.dart';
@@ -13,8 +13,18 @@ import 'providers/player_profile_view_model.dart';
 import 'screens/root_screen.dart';
 import 'utils/app_theme.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (KindeConfig.isReady) {
+    await KindeFlutterSDK.initializeSDK(
+      authDomain: KindeConfig.authDomain,
+      authClientId: KindeConfig.authClientId,
+      loginRedirectUri: KindeConfig.loginRedirectUri,
+      logoutRedirectUri: KindeConfig.logoutRedirectUri,
+      audience: KindeConfig.audience.isEmpty ? null : KindeConfig.audience,
+    );
+  }
 
   final prefs = await SharedPreferences.getInstance();
 
@@ -45,48 +55,11 @@ class VllowDugoutApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final app = MaterialApp(
+    return MaterialApp(
       title: 'Vllow Dugout',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme(),
-      home: const _AppRoot(),
+      home: const RootScreen(),
     );
-
-    if (!ClerkConfig.isReady) {
-      return app;
-    }
-
-    return ClerkAuth(
-      config: ClerkAuthConfig(publishableKey: ClerkConfig.publishableKey),
-      child: app,
-    );
-  }
-}
-
-/// Binds [AuthViewModel] to [ClerkAuth] when configured.
-class _AppRoot extends StatefulWidget {
-  const _AppRoot();
-
-  @override
-  State<_AppRoot> createState() => _AppRootState();
-}
-
-class _AppRootState extends State<_AppRoot> {
-  @override
-  void initState() {
-    super.initState();
-    if (ClerkConfig.isReady) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _bindClerk());
-    }
-  }
-
-  void _bindClerk() {
-    if (!mounted || !ClerkConfig.isReady) return;
-    context.read<AuthViewModel>().bindClerk(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const RootScreen();
   }
 }
