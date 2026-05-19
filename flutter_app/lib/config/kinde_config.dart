@@ -6,13 +6,13 @@
 class KindeConfig {
   KindeConfig._();
 
-  static const bool enabled = false;
+  static const bool enabled = true;
 
   /// e.g. https://yourbusiness.kinde.com or yourbusiness.kinde.com
-  static const String authDomain = 'https://REPLACE_ME.kinde.com';
+  static const String authDomain = 'https://vllowdugout.kinde.com';
 
   /// Application Client ID
-  static const String authClientId = 'REPLACE_CLIENT_ID';
+  static const String authClientId = '71bb53da162b49cdbd55ef6ad67dd69f';
 
   /// Must match Allowed callback URLs in Kinde (and Android/iOS URL scheme).
   static const String loginRedirectUri =
